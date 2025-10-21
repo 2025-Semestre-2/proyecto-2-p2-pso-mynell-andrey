@@ -1,0 +1,7 @@
+mov ax, 5
+mov bx, 5
+cmp ax, bx
+je 8
+mov ax, 0
+jmp 10
+mov ax, 1
