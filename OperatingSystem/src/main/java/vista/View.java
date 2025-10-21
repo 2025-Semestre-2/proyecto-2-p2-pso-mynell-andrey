@@ -782,6 +782,9 @@ public class View extends javax.swing.JFrame {
     public JSpinner getSpnMemoria(){
         return sptamano;
     }
+    public void setSpnMemoria(int i){
+        this.sptamano.setValue(i);
+    }
     public JSpinner getSpnDisco(){
         return sptadisco;
     }

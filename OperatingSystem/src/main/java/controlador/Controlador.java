@@ -45,10 +45,12 @@ public class Controlador {
         } catch (IOException ex) {
             System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
+        this.view.getSpnMemoria().addChangeListener(e -> showRam());
         this.view.btnVerEst(e -> mostrarEstadistica());
         this.estadistica.btnVolver(e -> volverEst());
         this.view.discoStageChange(e -> spinnerTamano());
         showDisk();
+        showRam();
     }
     public void ejecutarSO(){
         int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
@@ -66,18 +68,29 @@ public class Controlador {
         
         //guardarEnDisco();
         pc.crearProcesos();
-        guardarEspacioSO(sizeMemoria);
+        
         planificadorTrabajos();
         
     }
- 
-    public void guardarEspacioSO(int size){
+    
+    public void showRam(){
         view.getModelMemory().setRowCount(0);
-        for(int i =0;i<pc.getEspacioSO(size);i++){
-            view.addFilaMemoria(Integer.toString(i), "<so>");
+        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
+
+        guardarRam(0,pc.getEspacioSO(sizeMemoria),"<so>");
+        int inicio = pc.getEspacioSO(sizeMemoria);
+        System.out.println("i"+inicio+" "+sizeMemoria);
+        guardarRam(inicio,sizeMemoria,"<user>");
+        guardarRam(sizeMemoria,sizeMemoria+64,"<virtual>");
+    }
+    public void guardarRam(int inicio,int rango, String val){
+        
+        for(int i =inicio;i<rango;i++){
+            view.addFilaMemoria(Integer.toString(i), val);
         }
     }
     
+
     public void spinnerTamano(){
         try {
             this.pc.tamannoDisco((int) this.view.getSpnDisco().getValue());
@@ -120,12 +133,15 @@ public class Controlador {
                 updateBCP(proceso, indice);
                 boolean stop = false;
                 // ejecutar instrucciones
-                for (int i = proceso.getBase(); i < proceso.getBase() + proceso.getAlcance(); i++) {
+                int i = proceso.getBase();
+                proceso.setPc(i);
+                while (i < proceso.getBase() + proceso.getAlcance()) {
                     String instr = pc.getDisco().getDisco(i);
                     if (instr != null) {
                         pc.getCPU().setIR(instr);
                         this.view.jTable3.changeSelection(i, i, false, false);
                         String res = pc.interprete(instr, proceso);
+                        i = proceso.getPc();
                         switch(res){
                             case "": break;
                             case "~Exit":
@@ -155,7 +171,7 @@ public class Controlador {
                                 break;
                         }
                         if (stop) break;
-                        proceso.setPc(i + 1);
+                    
 
                         int tiempoInstr = pc.getTimer(instr);
                         try {
@@ -170,6 +186,8 @@ public class Controlador {
                         updateMemoria(proceso, indice);
                         actualizarBCP(proceso);
                         agregarFila(pc.getPila());
+                        System.out.println("pc"+ proceso.getPc());
+                   
                     }
                 }
                 if (stop) break;
@@ -207,7 +225,7 @@ public class Controlador {
 
             //guardarEnDisco();
             pc.crearProcesos();
-            guardarEspacioSO(sizeMemoria);
+          
             inicializado=true;
             pos =pc.getBCP().getPc();
             
@@ -472,6 +490,7 @@ public class Controlador {
         pc.tamannoMemoria(512);
         
         showDisk();
+        showRam();
     }
     
     public void cleanAll(){

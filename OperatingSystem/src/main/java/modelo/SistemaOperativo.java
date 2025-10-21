@@ -109,12 +109,15 @@ public class SistemaOperativo {
     public String interprete(String instr, BCP proceso){
         String[] partes = instr.split(" ");
         String op = partes[0].toLowerCase();
+        int newpc = proceso.getPc()+ 1;
         switch(op){
             case "load":
                 cpu.setAC(getRegistro(partes[1]));
+                proceso.setPc(newpc);
                 break;
             case "store":
                 movRegistro(partes[1],cpu.getAC());
+                proceso.setPc(newpc);
                 break;
             case "mov":
                 switch (partes[2].toLowerCase()){
@@ -127,12 +130,15 @@ public class SistemaOperativo {
                     default:
                         movRegistro(partes[1],Integer.parseInt(partes[2]));
                 }
+                proceso.setPc(newpc);
                 break;
             case "sub":
                 cpu.setAC(cpu.getAC()-getRegistro(partes[1]));
+                proceso.setPc(newpc);
                 break;
             case "add":
                 cpu.setAC(cpu.getAC()+getRegistro(partes[1]));
+                proceso.setPc(newpc);
                 break;
             case "inc":
                 if(partes.length == 1){
@@ -145,6 +151,7 @@ public class SistemaOperativo {
                     case "dx": cpu.setDX(cpu.getDX()+1);break; 
                     }
                 }
+                proceso.setPc(newpc);
                 break;
             case "dec":
                 if(partes.length == 1){
@@ -157,11 +164,13 @@ public class SistemaOperativo {
                     case "dx": cpu.setDX(cpu.getDX()-1);break; 
                     }
                 }
+                proceso.setPc(newpc);
                 break;
             case "swap":
                 int temp = getRegistro(partes[1]);
                 movRegistro(partes[1],getRegistro(partes[2]));
                 movRegistro(partes[2], temp);
+                proceso.setPc(newpc);
                 break;
             case "int":
                 switch(partes[1].toLowerCase()){
@@ -174,34 +183,43 @@ public class SistemaOperativo {
                     case "21h":
                         break;
                 }
+                proceso.setPc(newpc);
                 break;
             case "jmp":
-                int jmp = proceso.getPc()+ Integer.parseInt(partes[1]);
-                cpu.setPC((jmp >= 0)? jmp:0);
+                int jmp = proceso.getBase()+ Integer.parseInt(partes[1]);
+                //cpu.setPC((jmp >= 0)? jmp:0);
+                proceso.setPc(jmp);
                 break;
             case "cmp":
                 cmpBandera = getRegistro(partes[1]) == getRegistro(partes[2]);
+                proceso.setPc(newpc);
                 break;
             case "je":
                 if (cmpBandera){
-                    int je = proceso.getPc()+ Integer.parseInt(partes[1]);
-                    cpu.setPC((je >= 0)? je:0);
+                    int je = proceso.getBase()+ Integer.parseInt(partes[1]);
+                    
+                    //proceso.setPC((je >= 0)? je:0);
+                    proceso.setPc(je);
                 }
                 break;
             case "jne":
                 if (!cmpBandera){
-                    int jne = proceso.getPc()+ Integer.parseInt(partes[1]);
-                    cpu.setPC((jne >= 0)? jne:0);
+                   
+                    int jne = proceso.getBase()+ Integer.parseInt(partes[1]);
+                   // cpu.setPC((jne >= 0)? jne:0);
+                    proceso.setPc(jne);
                 }
                 break;
             case "param":
                 for (int i= 1; i<partes.length;i++){
                     pila.push(Integer.parseInt(partes[i].replace(",","")));
                 }
+                proceso.setPc(newpc);
                 break;
             case "push":
                 Stack u = pila;
                 u.push((Integer)getRegistro(partes[1]));
+                proceso.setPc(newpc);
                 break;
             case "pop":
                 int pop = pila.pop();
@@ -211,6 +229,7 @@ public class SistemaOperativo {
                 case "cx": cpu.setCX(pop); break;
                 case "dx": cpu.setDX(pop); break; 
                 }
+                proceso.setPc(newpc);
                 break;
         }
         return "";
@@ -219,16 +238,16 @@ public class SistemaOperativo {
         int time =0;
         switch(val){
             case "20h":
-                time= 2000;
+                time= 1000;
                 break;
             case "10h":
-                time= 2000;
+                time= 1000;
                 break;
             case "9h":
                 time= 500; //tiempo int - entrada de usuario
                 break;
             case "21h":
-                time= 5000;
+                time= 1000;
                 break;
         }
         return time;
@@ -241,19 +260,19 @@ public class SistemaOperativo {
         int time =0;
         switch(op){
             case "load":
-                time= 2000;
+                time= 1000;
                 break;
             case "store":
-                time= 2000;
+                time= 1000;
                 break;
             case "mov":
                 time= 1000;
                 break;
             case "sub":
-                time= 3000;
+                time= 1000;
                 break;
             case "add":
-                time= 3000;
+                time= 1000;
                 break;
             case "inc":
                 time= 1000;
@@ -262,25 +281,25 @@ public class SistemaOperativo {
                 time= 1000;
                 break;    
             case "swap":
-                time= 2000;
+                time= 1000;
                 break;  
             case "int":
                 time= getValue(val);
                 break;
             case "jmp":
-                time = 2000;
+                time = 1000;
                 break;
             case "cmp":
                 time = 1000;
                 break;
             case "jne":
-                time = 2000;
+                time = 1000;
                 break;
             case "je":
-                time = 2000;
+                time = 1000;
                 break;
             case "param":
-                time = 3000;
+                time = 1000;
                 break;
             case "push":
                 time = 1000;
