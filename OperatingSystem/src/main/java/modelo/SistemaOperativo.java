@@ -186,7 +186,7 @@ public class SistemaOperativo {
                 proceso.setPc(newpc);
                 break;
             case "jmp":
-                int jmp = proceso.getBase()+ Integer.parseInt(partes[1]);
+                int jmp = proceso.getPc()+ Integer.parseInt(partes[1]);
                 //cpu.setPC((jmp >= 0)? jmp:0);
                 proceso.setPc(jmp);
                 break;
@@ -196,7 +196,7 @@ public class SistemaOperativo {
                 break;
             case "je":
                 if (cmpBandera){
-                    int je = proceso.getBase()+ Integer.parseInt(partes[1]);
+                    int je = proceso.getPc()+ Integer.parseInt(partes[1]);
                     
                     //proceso.setPC((je >= 0)? je:0);
                     proceso.setPc(je);
@@ -205,7 +205,7 @@ public class SistemaOperativo {
             case "jne":
                 if (!cmpBandera){
                    
-                    int jne = proceso.getBase()+ Integer.parseInt(partes[1]);
+                    int jne = proceso.getPc()+ Integer.parseInt(partes[1]);
                    // cpu.setPC((jne >= 0)? jne:0);
                     proceso.setPc(jne);
                 }

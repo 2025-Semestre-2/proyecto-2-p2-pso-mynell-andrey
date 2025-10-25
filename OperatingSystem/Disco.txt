@@ -1,5 +1,5 @@
 test1.asm|50|7
-
+test1.asm|57|7
 
 
 
@@ -51,17 +51,17 @@ test1.asm|50|7
 mov ax, 5
 mov bx, 5
 cmp ax, bx
-je 8
+je 3
 mov ax, 0
-jmp 10
+jmp 1
 mov ax, 1
-
-
-
-
-
-
-
+mov ax, 5
+mov bx, 5
+cmp ax, bx
+je 3
+mov ax, 0
+jmp 1
+mov ax, 1
 
 
 

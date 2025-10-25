@@ -23,10 +23,12 @@ public class Controlador {
     private View view;
     private Estadistica estadistica;
     private Estadisticas est;
+    //var glob para paso a paso
     private int contador =0;
     private boolean inicializado = false;
     private BCP procesoActual = null;
     private int pos = 0;
+   
     
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
@@ -52,27 +54,7 @@ public class Controlador {
         showDisk();
         showRam();
     }
-    public void ejecutarSO(){
-        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
-        int sizeDisco = (Integer) view.getSpnDisco().getValue();
-        try {
-            pc.tamannoDisco(sizeDisco);
-            pc.tamannoMemoria(sizeMemoria);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Error al inicializar el disco: " + e.getMessage());
-            return;
-        }
         
-        //inicializo
-        pc.inicializarSO(sizeMemoria);
-        
-        //guardarEnDisco();
-        pc.crearProcesos();
-        
-        planificadorTrabajos();
-        
-    }
-    
     public void showRam(){
         view.getModelMemory().setRowCount(0);
         int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
@@ -105,6 +87,27 @@ public class Controlador {
         showDisk();
     }
         
+    public void ejecutarSO(){
+        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
+        int sizeDisco = (Integer) view.getSpnDisco().getValue();
+        try {
+            pc.tamannoDisco(sizeDisco);
+            pc.tamannoMemoria(sizeMemoria);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error al inicializar el disco: " + e.getMessage());
+            return;
+        }
+        
+        //inicializo
+        pc.inicializarSO(sizeMemoria);
+        
+        //guardarEnDisco();
+        pc.crearProcesos();
+        
+        planificadorTrabajos();
+        
+    }
+
     public void planificadorTrabajos() {
         new Thread(() -> {   
             int cpu = 0;
@@ -228,6 +231,9 @@ public class Controlador {
           
             inicializado=true;
             pos =pc.getBCP().getPc();
+     
+
+            
             
         }
         
@@ -237,6 +243,7 @@ public class Controlador {
     public void planificadorTrabajosPasoPaso() {
         int cpu=0;
         int next=0;
+
         if(procesoActual==null){
             if(pc.getPlanificador().sizeCola() == 0){
                 JOptionPane.showMessageDialog(null, "Error: No hay procesos en cola");
@@ -263,11 +270,17 @@ public class Controlador {
             procesoActual.setEstado("ejecucion");
             procesoActual.setTiempoInicio(System.currentTimeMillis());
             updateBCP(procesoActual, pos);
-        }
+
+            int i = procesoActual.getBase();
+            procesoActual.setPc(i); 
+            System.out.println( pc.getPlanificador().verSiguiente());
+
+        }         
         
 
         // ejecutar instrucciones}
-        int posIntr = procesoActual.getBase()+contador;
+        int posIntr = procesoActual.getPc(); 
+        System.out.println("pos"+posIntr);
         if(contador < procesoActual.getAlcance()) {
             String instr = pc.getDisco().getDisco(posIntr);
             if (instr != null) {
@@ -306,7 +319,7 @@ public class Controlador {
                         view.jTextArea1.append(res+"\n");
                         break;
                 }
-                procesoActual.setPc(posIntr + 1);
+                //procesoActual.setPc(posIntr + 1);
 
                 // actualizar UI de memoria y BCP en el hilo de Swing
                 pc.actualizarBCPDesdeCPU(procesoActual);
@@ -318,6 +331,7 @@ public class Controlador {
             }
             contador++;
             next++;
+            
             
         }
         else{
