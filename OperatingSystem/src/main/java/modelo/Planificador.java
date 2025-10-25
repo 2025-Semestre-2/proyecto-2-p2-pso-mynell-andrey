@@ -3,30 +3,46 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package modelo;
-import java.util.LinkedList;
-import java.util.Queue;
-/**
- *
- * @author Andrey
- */
+import java.util.HashMap;
+
+
+
 public class Planificador {
-    private Queue<BCP> colaListos;
+    private HashMap<String,BCP> procesos;
     
     public Planificador(){
-        colaListos = new LinkedList<>();
+        this.procesos = new HashMap<>();
     }
-    public void agregarProceso(BCP bcp){
-        colaListos.add(bcp);
+    public void agregarProceso(String nombre, BCP bcp){
+        procesos.put(nombre, bcp);
     }
-    public BCP obeterSiguienteProceso(){
-        BCP proceso = colaListos.poll();
-        return proceso;
+    public BCP obeterProceso(String nombre){
+        return procesos.get(nombre);
     }
-    public BCP verSiguiente(){
-        return colaListos.peek();
+    public BCP obtenerSiguienteProceso() {
+        if (procesos.isEmpty()) return null;
+        return procesos.values().iterator().next(); 
     }
-    public int sizeCola(){return colaListos.size();}
-    public Queue<BCP> getColaListos(){
-        return colaListos;
+    public void eliminarProceso(String nombre){
+        procesos.remove(nombre);
+    }
+    public void eliminarSiguienteProceso() {
+        if (!procesos.isEmpty()) {
+            String primeraClave = procesos.keySet().iterator().next();
+            procesos.remove(primeraClave);
+        }
+    }
+
+    
+    public boolean existeProceso(String nombre) {
+        return procesos.containsKey(nombre);
+    }
+    
+    public int sizeProceso(){return procesos.size();}
+    public HashMap<String, BCP> getProcesos() {
+        return procesos;
+    }
+    public void setProcesos(HashMap<String, BCP> procesos) {
+        this.procesos = procesos;
     }
 }

@@ -16,7 +16,7 @@ public class SistemaOperativo {
     private Memoria memoria;
     private Planificador plan;
     private List<String> instrucciones;
-    private Queue<BCP> colaProcesos; //FIFO
+  
     private boolean cmpBandera = false;
     private Stack<Integer> pila = new Stack<>();
     
@@ -25,7 +25,7 @@ public class SistemaOperativo {
         bcp = new BCP();
         cpu = new CPU();
         instrucciones = new ArrayList<>();
-        colaProcesos = new LinkedList<>(); 
+
         plan = new Planificador();
         try {
             this.disco = new Disco("Disco.txt");
@@ -399,7 +399,8 @@ public class SistemaOperativo {
                 archAcc.add(nombreArchivo);
                 BCP bcp = new BCP(contProceso++,estado,i+1,base,alcance);
                 bcp.getArchivos().addAll(archAcc);
-                plan.agregarProceso(bcp);
+                String nombre = disco.getDisco(i);
+                plan.agregarProceso(nombre,bcp);
                 
             }
         } 

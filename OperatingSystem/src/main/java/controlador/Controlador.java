@@ -113,10 +113,10 @@ public class Controlador {
             int cpu = 0;
             int indice = pc.getBCP().getPc();
             int next=0;
-            while (pc.getPlanificador().sizeCola() > 0) {
+            while (pc.getPlanificador().sizeProceso() > 0) {
 
                 // tomar el proceso de la cola
-                BCP proceso = pc.getPlanificador().obeterSiguienteProceso();
+                BCP proceso = pc.getPlanificador().obtenerSiguienteProceso();
                 if(cpu>5){
                     proceso.setEstado("nuevo");
                     proceso.setCpuAsig("hilo"+cpu);
@@ -193,6 +193,7 @@ public class Controlador {
                    
                     }
                 }
+                
                 if (stop) break;
                 // finalizar proceso
                 proceso.setEstado("finalizado");
@@ -202,7 +203,7 @@ public class Controlador {
 
                 updateBCP(proceso, indice);
                 agregarEstadosTabla(proceso.getArchivos());
-
+                pc.getPlanificador().eliminarSiguienteProceso();
                 indice += 16;
                 cpu++;
                 next++;
@@ -245,13 +246,13 @@ public class Controlador {
         int next=0;
 
         if(procesoActual==null){
-            if(pc.getPlanificador().sizeCola() == 0){
+            if(pc.getPlanificador().sizeProceso() == 0){
                 JOptionPane.showMessageDialog(null, "Error: No hay procesos en cola");
                 return;
             }
             
             // tomar el proceso de la cola
-            procesoActual = pc.getPlanificador().obeterSiguienteProceso();
+            procesoActual = pc.getPlanificador().obtenerSiguienteProceso();
             if(cpu>5){
                     procesoActual.setEstado("nuevo");
                     procesoActual.setCpuAsig("hilo"+cpu);
@@ -273,7 +274,7 @@ public class Controlador {
 
             int i = procesoActual.getBase();
             procesoActual.setPc(i); 
-            System.out.println( pc.getPlanificador().verSiguiente());
+            
 
         }         
         
@@ -344,7 +345,7 @@ public class Controlador {
 
             updateBCP(procesoActual, pos);
             agregarEstadosTabla(procesoActual.getArchivos());
-         
+            pc.getPlanificador().eliminarSiguienteProceso();
             pos += 16; //indice
             contador =0; // contador
             procesoActual=null;
@@ -362,7 +363,7 @@ public class Controlador {
     }
     public String getEnlace(int n){
         String enlace = "";
-        if(n < pc.getPlanificador().sizeCola() ) {
+        if(n < pc.getPlanificador().sizeProceso() ) {
             n++;
             enlace = "p"+n;
         }else{
