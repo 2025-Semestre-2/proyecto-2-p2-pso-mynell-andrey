@@ -10,11 +10,10 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 /**
- *
- * @author Andrey
+ * meter funciones auxiliares para no sobrecargar controlador
  */
 public class Utilidades {
-    //abre un archivo y lo retorna
+  
 
     public static File[] seleccionarArchivos() {
         JFileChooser fc = new JFileChooser();
@@ -38,5 +37,29 @@ public class Utilidades {
         }
         return lineas;
     }
+    public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesos(HashMap<String, ArrayList<Integer>> mapa) {
+        List<Map.Entry<String, ArrayList<Integer>>> lista = new ArrayList<>(mapa.entrySet());
+        lista.sort((e1, e2) -> {
+            //primero ordene por arrivo
+            int base1 = e1.getValue().get(0);
+            int base2 = e2.getValue().get(0);
+            int cmp = Integer.compare(base1, base2);
+            //sino por ragaga
+            if (cmp == 0) {
+        
+                int alcance1 = e1.getValue().get(1);
+                int alcance2 = e2.getValue().get(1);
+                return Integer.compare(alcance1, alcance2);
+            }
+            return cmp;
+        });
+        LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
+        for (Map.Entry<String, ArrayList<Integer>> entry : lista) {
+            mapaOrdenado.put(entry.getKey(), entry.getValue());
+        }
+
+        return mapaOrdenado;
+    }
+    
 
 }

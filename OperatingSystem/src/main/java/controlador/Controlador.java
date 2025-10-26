@@ -1,7 +1,6 @@
 package controlador;
 
-import static controlador.Utilidades.leerArchivo;
-import static controlador.Utilidades.seleccionarArchivos;
+import static controlador.Utilidades.*;
 import java.awt.HeadlessException;
 import modelo.SistemaOperativo;
 
@@ -10,6 +9,8 @@ import vista.View;
 import vista.Estadistica;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
@@ -23,13 +24,13 @@ public class Controlador {
     private View view;
     private Estadistica estadistica;
     private Estadisticas est;
+    private int indiceArch = 0;
     //var glob para paso a paso
     private int contador =0;
     private boolean inicializado = false;
     private BCP procesoActual = null;
     private int pos = 0;
-   
-    
+
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
         this.pc = pc;
@@ -38,7 +39,7 @@ public class Controlador {
   
         this.estadistica = estadistica;
         this.view.btnBuscarListener(e -> buscarArchivo());
-        this.view.btnEjecutar(e -> ejecutarSO());
+        this.view.btnEjecutar(e -> modoEjecucion());
         this.view.btnLimpiar(e -> cleanAll());
         this.view.btnReset(e -> clean());
         this.view.btnPasoListener(e -> ejecutarPasoPaso());
@@ -53,41 +54,51 @@ public class Controlador {
         this.view.discoStageChange(e -> spinnerTamano());
         showDisk();
         showRam();
-    }
+        inicializarSO();
         
-    public void showRam(){
-        view.getModelMemory().setRowCount(0);
-        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
-
-        guardarRam(0,pc.getEspacioSO(sizeMemoria),"<so>");
-        int inicio = pc.getEspacioSO(sizeMemoria);
-        System.out.println("i"+inicio+" "+sizeMemoria);
-        guardarRam(inicio,sizeMemoria,"<user>");
-        guardarRam(sizeMemoria,sizeMemoria+64,"<virtual>");
-    }
-    public void guardarRam(int inicio,int rango, String val){
-        
-        for(int i =inicio;i<rango;i++){
-            view.addFilaMemoria(Integer.toString(i), val);
-        }
     }
     
-
-    public void spinnerTamano(){
-        try {
-            this.pc.tamannoDisco((int) this.view.getSpnDisco().getValue());
-        } catch (IOException ex) {
-            try {
-                this.view.getSpnDisco().setValue(this.pc.getDisco().size());
-            } catch (IOException ex1) {
-                System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex1);
-            }
-            JOptionPane.showMessageDialog(null, "No se puede reducir espacio utilizado ");
+    public void crearProcesos(){
+        System.out.println("ar"+indiceArch+"+"+pc.getIntr().size());
+        if (pc.getIntr() == null || pc.getIntr().isEmpty()) {
+           return;
         }
-        showDisk();
+    
+        int contadorinstr =0;
+        for(int i = indiceArch;i<pc.getIntr().size();i++){
+            String instru = pc.getDisco().getDisco(i);
+            
+            if(instru.contains("|")){
+                String[] partes = instru.split("\\|");
+                String nombreArchivo = partes[0];
+                BCP proceso = pc.getPlanificador().obeterProceso(nombreArchivo);
+                
+                view.addFilaProcesos(nombreArchivo,i,proceso.getAlcance());
+                contadorinstr++;
+            }
+          
+            
+        } 
+          System.out.println("bucle?");
+        indiceArch = contadorinstr;
     }
         
-    public void ejecutarSO(){
+    public void modoEjecucion(){
+    
+        String tipo = view.getCBoxCPU().toString();
+        System.out.println(view.getProcesosTabla());
+        System.out.println(ordenarProcesos(view.getProcesosTabla()));
+        switch(tipo){
+            case "FCF": algoritmoFCFS(view.getProcesosTabla());break;
+            default:
+              JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
+              break;
+        
+        }
+
+    }
+        
+    public void inicializarSO(){
         int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
         int sizeDisco = (Integer) view.getSpnDisco().getValue();
         try {
@@ -100,15 +111,13 @@ public class Controlador {
         
         //inicializo
         pc.inicializarSO(sizeMemoria);
-        
-        //guardarEnDisco();
         pc.crearProcesos();
+        crearProcesos();
         
-        planificadorTrabajos();
-        
+       // planificadorTrabajos();
     }
 
-    public void planificadorTrabajos() {
+    public void algoritmoFCFS(HashMap<String, ArrayList<Integer>> mapa) {
         new Thread(() -> {   
             int cpu = 0;
             int indice = pc.getBCP().getPc();
@@ -465,6 +474,7 @@ public class Controlador {
             }
         }
         showDisk();
+        inicializarSO();
     }
     
     private void showDisk(){
@@ -475,9 +485,40 @@ public class Controlador {
             modelo.addRow(new Object[]{i, disco.get(i)});
         }
     }
+    public void showRam(){
+        view.getModelMemory().setRowCount(0);
+        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
 
+        guardarRam(0,pc.getEspacioSO(sizeMemoria),"<so>");
+        int inicio = pc.getEspacioSO(sizeMemoria);
+        System.out.println("i"+inicio+" "+sizeMemoria);
+        guardarRam(inicio,sizeMemoria,"<user>");
+        guardarRam(sizeMemoria,sizeMemoria+64,"<virtual>");
+    }
+    public void guardarRam(int inicio,int rango, String val){
+        
+        for(int i =inicio;i<rango;i++){
+            view.addFilaMemoria(Integer.toString(i), val);
+        }
+    }
+    
+
+    public void spinnerTamano(){
+        try {
+            this.pc.tamannoDisco((int) this.view.getSpnDisco().getValue());
+        } catch (IOException ex) {
+            try {
+                this.view.getSpnDisco().setValue(this.pc.getDisco().size());
+            } catch (IOException ex1) {
+                System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex1);
+            }
+            JOptionPane.showMessageDialog(null, "No se puede reducir espacio utilizado ");
+        }
+        showDisk();
+    }
     public void clean(){
         view.getModelProgram().setRowCount(0);
+        view.getModelProcesos().setRowCount(0);
         view.getModelMemory().setRowCount(0);
         view.getModelPila().setRowCount(0);
         view.getModelArchivos().setRowCount(0);
@@ -506,6 +547,7 @@ public class Controlador {
         
         showDisk();
         showRam();
+        indiceArch=0;
     }
     
     public void cleanAll(){

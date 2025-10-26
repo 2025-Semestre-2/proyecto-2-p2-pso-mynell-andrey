@@ -7,6 +7,8 @@ package vista;
 import controlador.Controlador;
 import controlador.Utilidades;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
 import javax.swing.JSpinner;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
@@ -836,6 +838,28 @@ public class View extends javax.swing.JFrame {
         public Object getCBoxMemoria() {
         return jComboBox2.getSelectedItem();
     }
+    public DefaultTableModel getModelProcesos(){
+        return (DefaultTableModel) jTable8.getModel();
+    }
+    public void addFilaProcesos(String colum1, int colum2, int colum3){
+        DefaultTableModel model = (DefaultTableModel) jTable8.getModel();
+        model.addRow(new Object[]{colum1,colum2,colum3});
+    }
+    public HashMap<String, ArrayList<Integer>> getProcesosTabla(){
+        HashMap<String, ArrayList<Integer>> datos = new HashMap<>();
+        DefaultTableModel model = (DefaultTableModel) jTable8.getModel();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String key = model.getValueAt(i, 0).toString(); 
+            ArrayList<Integer> valores = new ArrayList<>();
+            valores.add(Integer.parseInt(model.getValueAt(i, 1).toString())); 
+            valores.add(Integer.parseInt(model.getValueAt(i, 2).toString())); 
+
+            datos.put(key, valores);
+        }
+
+        return datos;
+    }
 
     
     public void addFilaES(int fila,String colum1){
@@ -955,26 +979,9 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane10;
-    private javax.swing.JScrollPane jScrollPane11;
-    private javax.swing.JScrollPane jScrollPane12;
-    private javax.swing.JScrollPane jScrollPane13;
-    private javax.swing.JScrollPane jScrollPane14;
-    private javax.swing.JScrollPane jScrollPane15;
-    private javax.swing.JScrollPane jScrollPane16;
-    private javax.swing.JScrollPane jScrollPane17;
-    private javax.swing.JScrollPane jScrollPane18;
-    private javax.swing.JScrollPane jScrollPane19;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane20;
-    private javax.swing.JScrollPane jScrollPane21;
-    private javax.swing.JScrollPane jScrollPane22;
-    private javax.swing.JScrollPane jScrollPane23;
-    private javax.swing.JScrollPane jScrollPane24;
-    private javax.swing.JScrollPane jScrollPane25;
     private javax.swing.JScrollPane jScrollPane26;
     private javax.swing.JScrollPane jScrollPane27;
-    private javax.swing.JScrollPane jScrollPane28;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
@@ -985,22 +992,7 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable10;
-    private javax.swing.JTable jTable11;
-    private javax.swing.JTable jTable12;
-    private javax.swing.JTable jTable13;
-    private javax.swing.JTable jTable14;
-    private javax.swing.JTable jTable15;
-    private javax.swing.JTable jTable16;
-    private javax.swing.JTable jTable17;
-    private javax.swing.JTable jTable18;
-    private javax.swing.JTable jTable19;
     private javax.swing.JTable jTable2;
-    private javax.swing.JTable jTable20;
-    private javax.swing.JTable jTable21;
-    private javax.swing.JTable jTable22;
-    private javax.swing.JTable jTable23;
-    private javax.swing.JTable jTable24;
     private javax.swing.JTable jTable25;
     private javax.swing.JTable jTable26;
     public javax.swing.JTable jTable3;
@@ -1009,7 +1001,6 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JTable jTable6;
     private javax.swing.JTable jTable7;
     public javax.swing.JTable jTable8;
-    private javax.swing.JTable jTable9;
     public javax.swing.JTextArea jTextArea1;
     public javax.swing.JTextField jTextField1;
     private javax.swing.JLabel lbAlcance;
@@ -1027,7 +1018,6 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JLabel lblPC;
     private javax.swing.JLabel result;
     private javax.swing.JLabel result1;
-    private java.awt.ScrollPane scrollPane1;
     private javax.swing.JSpinner sptadisco;
     private javax.swing.JSpinner sptamano;
     // End of variables declaration//GEN-END:variables

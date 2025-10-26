@@ -60,7 +60,7 @@ public class SistemaOperativo {
     }
 
     public List<String> getIntr(){
-        System.out.println(instrucciones);
+        //System.out.println(instrucciones);
         return instrucciones;
     }   
 
@@ -399,8 +399,8 @@ public class SistemaOperativo {
                 archAcc.add(nombreArchivo);
                 BCP bcp = new BCP(contProceso++,estado,i+1,base,alcance);
                 bcp.getArchivos().addAll(archAcc);
-                String nombre = disco.getDisco(i);
-                plan.agregarProceso(nombre,bcp);
+        
+                plan.agregarProceso(nombreArchivo,bcp);
                 
             }
         } 
