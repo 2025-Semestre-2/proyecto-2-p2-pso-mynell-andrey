@@ -30,6 +30,7 @@ public class Controlador {
     private boolean inicializado = false;
     private BCP procesoActual = null;
     private int pos = 0;
+    
 
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
@@ -87,9 +88,13 @@ public class Controlador {
     
         String tipo = view.getCBoxCPU().toString();
         System.out.println(view.getProcesosTabla());
-        System.out.println(ordenarProcesos(view.getProcesosTabla()));
+        System.out.println(ordenarProcesosFCFS(view.getProcesosTabla()));
         switch(tipo){
-            case "FCF": algoritmoFCFS(view.getProcesosTabla());break;
+            case "FCFS": 
+                HashMap<String, ArrayList<Integer>> ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
+                System.out.println(ordenarProcesos);
+                algoritmoFCFS(ordenarProcesos);
+                break;
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               break;
@@ -123,9 +128,10 @@ public class Controlador {
             int indice = pc.getBCP().getPc();
             int next=0;
             while (pc.getPlanificador().sizeProceso() > 0) {
-
+                //fcfs
+                String nombreproceso = obtenerNombreProcesoU(mapa);
                 // tomar el proceso de la cola
-                BCP proceso = pc.getPlanificador().obtenerSiguienteProceso();
+                BCP proceso = pc.getPlanificador().obeterProceso(nombreproceso);
                 if(cpu>5){
                     proceso.setEstado("nuevo");
                     proceso.setCpuAsig("hilo"+cpu);
@@ -212,10 +218,13 @@ public class Controlador {
 
                 updateBCP(proceso, indice);
                 agregarEstadosTabla(proceso.getArchivos());
-                pc.getPlanificador().eliminarSiguienteProceso();
+                
                 indice += 16;
                 cpu++;
                 next++;
+                //fcfs sacar de la cola
+                pc.getPlanificador().eliminarProceso(nombreproceso);
+                eliminarProcesoU(mapa,nombreproceso);
 
             }
         }).start(); 
