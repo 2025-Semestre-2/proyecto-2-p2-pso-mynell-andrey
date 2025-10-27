@@ -88,19 +88,37 @@ public class Controlador {
     
         String tipo = view.getCBoxCPU().toString();
         System.out.println(view.getProcesosTabla());
-        System.out.println(ordenarProcesosFCFS(view.getProcesosTabla()));
+        System.out.println("fcfs"+ordenarProcesosFCFS(view.getProcesosTabla()));
+        System.out.println("spn"+ordenarProcesosSJF(view.getProcesosTabla()));
+        System.out.println("srt"+ordenarProcesosSRT(view.getProcesosTabla()));
+        System.out.println("ajuste"+ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla())));
+        HashMap<String, ArrayList<Integer>> ordenarProcesos;
+              
         switch(tipo){
             case "FCFS": 
-                HashMap<String, ArrayList<Integer>> ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
-                System.out.println(ordenarProcesos);
-                algoritmoFCFS(ordenarProcesos);
+                ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
+              
+                ejecutarAlgoritmo(ordenarProcesos);
                 break;
+            
+            case "SJF": 
+                ordenarProcesos = ordenarProcesosSJF(view.getProcesosTabla());
+              
+                ejecutarAlgoritmo(ordenarProcesos);
+                break;
+            case "SRT": 
+                ordenarProcesos = ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla()));
+              
+                ejecutarAlgoritmo(ordenarProcesos);
+                break;
+            case "RR":
+                String q = JOptionPane.showInputDialog(null, "Introduce el quantum:");
+                System.out.println("q="+q);
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               break;
         
         }
-
     }
         
     public void inicializarSO(){
@@ -118,117 +136,53 @@ public class Controlador {
         pc.inicializarSO(sizeMemoria);
         pc.crearProcesos();
         crearProcesos();
-        
-       // planificadorTrabajos();
+ 
     }
+    
 
-    public void algoritmoFCFS(HashMap<String, ArrayList<Integer>> mapa) {
+    public void ejecutarAlgoritmo(HashMap<String, ArrayList<Integer>> mapa) {
         new Thread(() -> {   
             int cpu = 0;
             int indice = pc.getBCP().getPc();
             int next=0;
-            while (pc.getPlanificador().sizeProceso() > 0) {
+            while (mapa.size() > 0) {
                 //fcfs
                 String nombreproceso = obtenerNombreProcesoU(mapa);
-                // tomar el proceso de la cola
-                BCP proceso = pc.getPlanificador().obeterProceso(nombreproceso);
-                if(cpu>5){
-                    proceso.setEstado("nuevo");
-                    proceso.setCpuAsig("hilo"+cpu);
-                    cpu =1;
-                }
-                proceso.setCpuAsig("hilo"+cpu);
-                String enlace = getEnlace(next);
-                proceso.setSiguiente(enlace);
-                preparadoBCP(proceso, indice);//este para añadir el nuevo a los estados
-                // pasar a preparado
-                proceso.setEstado("preparado");
-                updateBCP(proceso, indice);
-
-                // pasar a ejecucion
-                proceso.setEstado("ejecucion");
-                proceso.setTiempoInicio(System.currentTimeMillis());
-                updateBCP(proceso, indice);
+                String nombrekey = getNombreKey(nombreproceso);
+                int rafaga = obtenerRafagaProcesoU(mapa);
+                // tomar el proceso de la cola 
+                BCP proceso = inicializarProcesos(nombrekey,cpu,indice,next);
+                //ejecutar
                 boolean stop = false;
-                // ejecutar instrucciones
                 int i = proceso.getBase();
-                proceso.setPc(i);
-                while (i < proceso.getBase() + proceso.getAlcance()) {
+                while (i < proceso.getBase() + rafaga) {
                     String instr = pc.getDisco().getDisco(i);
                     if (instr != null) {
                         pc.getCPU().setIR(instr);
                         this.view.jTable3.changeSelection(i, i, false, false);
                         String res = pc.interprete(instr, proceso);
                         i = proceso.getPc();
-                        switch(res){
-                            case "": break;
-                            case "~Exit":
-                                stop = true;
-                                break;
-                            case "~Input": 
-                                this.view.jTextField1.selectAll();
-                                CountDownLatch latch = new CountDownLatch(1);
-                                final String[] dato = new String[1];
-                                this.view.jTextField1.addActionListener(e ->{
-                                    dato[0] = this.view.jTextField1.getText();
-                                    this.view.jTextField1.setText("");
-                                    latch.countDown();
-                                });
-                                {
-                                    try {
-                                        latch.await();
-                                        this.pc.movRegistro("DX", Integer.parseInt(dato[0]));
-                                    } catch (InterruptedException ex) {
-                                        System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-                                    }
-                                }
-                                break;
-
-                            default:
-                                view.jTextArea1.append(res+"\n");
-                                break;
-                        }
+                        //entrada usuario
+                        stop = procesarResultado(res);
                         if (stop) break;
                     
-
-                        int tiempoInstr = pc.getTimer(instr);
-                        try {
-                            Thread.sleep(tiempoInstr);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-
+                        esperar(pc.getTimer(instr));
                         // actualizar UI de memoria y BCP en el hilo de Swing
-                        pc.actualizarBCPDesdeCPU(proceso);
-                        pc.guardarBCPMemoria(proceso, indice);
-                        updateMemoria(proceso, indice);
-                        actualizarBCP(proceso);
-                        agregarFila(pc.getPila());
-                        System.out.println("pc"+ proceso.getPc());
-                   
+                        actualizarUI(proceso,indice);
                     }
                 }
-                
                 if (stop) break;
                 // finalizar proceso
-                proceso.setEstado("finalizado");
-                proceso.setTiempoFin(System.currentTimeMillis());
-                proceso.setTiempoTotal(proceso.getTiempoFin() - proceso.getTiempoInicio());
-                est.agregar(proceso.getIdProceso(), proceso.getTiempoTotal()); 
-
-                updateBCP(proceso, indice);
-                agregarEstadosTabla(proceso.getArchivos());
+                finalizarProceso(proceso,indice);
                 
                 indice += 16;
                 cpu++;
                 next++;
                 //fcfs sacar de la cola
-                pc.getPlanificador().eliminarProceso(nombreproceso);
+               // pc.getPlanificador().eliminarProceso(nombreproceso);
                 eliminarProcesoU(mapa,nombreproceso);
-
             }
         }).start(); 
-
     }
     public void ejecutarPasoPaso(){
         if(!inicializado){
@@ -355,7 +309,7 @@ public class Controlador {
         }
         else{
             // finalizar proceso
-          
+            
             procesoActual.setEstado("finalizado");
             procesoActual.setTiempoFin(System.currentTimeMillis());
             procesoActual.setTiempoTotal(procesoActual.getTiempoFin() - procesoActual.getTiempoInicio());
@@ -372,6 +326,96 @@ public class Controlador {
 
         }
     }
+    /*
+    ===========================FUNCIONES ALGORITMOS AUX==========================
+    */
+    public BCP inicializarProcesos(String nombre,int cpu,int indice, int next){
+        BCP proceso = pc.getPlanificador().obeterProceso(nombre);
+        if(cpu>5){
+            proceso.setEstado("nuevo");
+            proceso.setCpuAsig("hilo"+cpu);
+            cpu =1;
+        }
+        proceso.setCpuAsig("hilo"+cpu);
+        String enlace = getEnlace(next);
+        proceso.setSiguiente(enlace);
+        preparadoBCP(proceso, indice);//este para añadir el nuevo a los estados
+        // pasar a preparado
+        proceso.setEstado("preparado");
+        updateBCP(proceso, indice);
+
+        // pasar a ejecucion
+        proceso.setEstado("ejecucion");
+        proceso.setTiempoInicio(System.currentTimeMillis());
+        updateBCP(proceso, indice);
+        
+        // ejecutar instrucciones
+        int i = proceso.getBase();
+        proceso.setPc(i);
+        return proceso;
+    }
+    public void esperar(int tiempoInstr){
+        try {
+            Thread.sleep(tiempoInstr);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+    public boolean procesarResultado(String res){
+        switch(res){
+            case "": return false;
+            case "~Exit":
+                return true;
+                
+            case "~Input": 
+                manejarEntradaUsuario();
+                return false;
+
+            default:
+                view.jTextArea1.append(res+"\n");
+                return false;
+        }
+    }
+    public void manejarEntradaUsuario(){
+        this.view.jTextField1.selectAll();
+        CountDownLatch latch = new CountDownLatch(1);
+        final String[] dato = new String[1];
+        this.view.jTextField1.addActionListener(e ->{
+            dato[0] = this.view.jTextField1.getText();
+            this.view.jTextField1.setText("");
+            latch.countDown();
+        });
+        {
+            try {
+                latch.await();
+                this.pc.movRegistro("DX", Integer.parseInt(dato[0]));
+            } catch (InterruptedException ex) {
+                System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+        }
+    }
+    public void actualizarUI(BCP proceso,int indice){
+        pc.actualizarBCPDesdeCPU(proceso);
+        pc.guardarBCPMemoria(proceso, indice);
+        updateMemoria(proceso, indice);
+        actualizarBCP(proceso);
+        agregarFila(pc.getPila());
+        System.out.println("pc"+ proceso.getPc());
+    }
+    public void finalizarProceso(BCP proceso,int indice){
+        proceso.setEstado("finalizado");
+        proceso.setTiempoFin(System.currentTimeMillis());
+        proceso.setTiempoTotal(proceso.getTiempoFin() - proceso.getTiempoInicio());
+        est.agregar(proceso.getIdProceso(), proceso.getTiempoTotal()); 
+        updateBCP(proceso, indice);
+        agregarEstadosTabla(proceso.getArchivos());
+        
+    }
+    /*
+    ===========================OTRAS FUNCIONES==========================
+    */
+    
+    
 
     public void updateBCP(BCP proceso,int indice){
         pc.guardarBCPMemoria(proceso,indice);
@@ -557,6 +601,7 @@ public class Controlador {
         showDisk();
         showRam();
         indiceArch=0;
+        inicializarSO();
     }
     
     public void cleanAll(){
