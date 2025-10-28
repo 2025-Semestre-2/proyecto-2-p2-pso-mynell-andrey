@@ -112,8 +112,31 @@ public class Controlador {
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "RR":
-                String q = JOptionPane.showInputDialog(null, "Introduce el quantum:");
+                String qstr=null;
+                int q =-1;
+                while(q<0){
+                    qstr = JOptionPane.showInputDialog(null, "Introduce el quantum:");
+                    if (qstr == null) {
+                        JOptionPane.showMessageDialog(null, "Operación cancelada.");
+                        return;
+                    }
+                    try{
+                        q = Integer.parseInt(qstr);
+                        if(q<=0){
+                            JOptionPane.showMessageDialog(null, "El quantum debe ser un número entero positivo.");
+                        }
+                    }catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(null, "Error, Ingresa un número entero válido.");
+                    }
+                    
+                }
+                
                 System.out.println("q="+q);
+                System.out.println("rr"+ordenarProcesosRR(view.getProcesosTabla(),q));
+                ordenarProcesos = ordenarProcesosRR(view.getProcesosTabla(),q);
+              
+                ejecutarAlgoritmo(ordenarProcesos);
+                break;
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               break;

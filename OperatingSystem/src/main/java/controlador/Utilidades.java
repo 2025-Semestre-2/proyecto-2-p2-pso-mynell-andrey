@@ -229,6 +229,51 @@ public class Utilidades {
 
 
     }
+    /**
+     * 4= test3.asm=[3, 4]
+     * 3=test4.asm=[2, 2]
+     * 1= test6.asm=[1, 5]
+     * 2=test5.asm=[2, 3]
+     */
+        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosRR(HashMap<String, ArrayList<Integer>> mapa,
+                int quantum) { 
+            List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet()); 
+            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>(); 
+            
+            Queue<Map.Entry<String, ArrayList<Integer>>> cola = new LinkedList<>();
+            int tiempo = 0; 
+            
+            while (!procesos.isEmpty() ||!cola.isEmpty()) {
+
+                Iterator<Map.Entry<String, ArrayList<Integer>>> it = procesos.iterator();
+                while (it.hasNext()) {
+                    Map.Entry<String, ArrayList<Integer>> p = it.next();
+                    if (p.getValue().get(0) <= tiempo) {
+                        cola.add(p);
+                        it.remove();
+                    }
+                }
+
+                if (cola.isEmpty()) {
+                    tiempo++; 
+                    continue;
+                }
+                Map.Entry<String, ArrayList<Integer>> actual = cola.poll();
+                int llegada = actual.getValue().get(0);
+                int rafaga = actual.getValue().get(1);
+
+                int ejecucion = Math.min(quantum, rafaga);
+                mapaOrdenado.put(actual.getKey() + "_" + tiempo, new ArrayList<>(List.of(llegada, ejecucion)));
+
+                tiempo += ejecucion;
+
+                if (rafaga - ejecucion > 0) {
+                    ArrayList<Integer> nuevo = new ArrayList<>(Arrays.asList(llegada, rafaga - ejecucion));
+                    cola.add(new AbstractMap.SimpleEntry<>(actual.getKey(), nuevo));
+                } 
+            }
+            return mapaOrdenado; 
+        }
 
     
 
