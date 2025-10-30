@@ -1,6 +1,8 @@
 controlador\Utilidades.class
 vista\Estadistica$2.class
 vista\View.class
+vista\View$1.class
+vista\View$2.class
 modelo\CPU.class
 mvc\Main.class
 vista\Estadistica$1.class

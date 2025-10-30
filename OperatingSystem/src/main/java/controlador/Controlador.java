@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
@@ -88,25 +89,29 @@ public class Controlador {
     
         String tipo = view.getCBoxCPU().toString();
         System.out.println(view.getProcesosTabla());
-        System.out.println("fcfs"+ordenarProcesosFCFS(view.getProcesosTabla()));
-        System.out.println("spn"+ordenarProcesosSJF(view.getProcesosTabla()));
-        System.out.println("srt"+ordenarProcesosSRT(view.getProcesosTabla()));
-        System.out.println("ajuste"+ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla())));
+        
+        
+        
         HashMap<String, ArrayList<Integer>> ordenarProcesos;
+        
               
         switch(tipo){
             case "FCFS": 
+                System.out.println("fcfs"+ordenarProcesosFCFS(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
-              
+                
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             
             case "SJF": 
+                System.out.println("spn"+ordenarProcesosSJF(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosSJF(view.getProcesosTabla());
               
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "SRT": 
+        
+                System.out.println("srt"+ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla())));
                 ordenarProcesos = ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla()));
               
                 ejecutarAlgoritmo(ordenarProcesos);
@@ -164,8 +169,8 @@ public class Controlador {
     
 
     public void ejecutarAlgoritmo(HashMap<String, ArrayList<Integer>> mapa) {
+        LinkedHashMap<String, ArrayList<Integer>> mapaRegistro = new LinkedHashMap<>(mapa);
         new Thread(() -> {   
-            int cpu = 0;
             int indice = pc.getBCP().getPc();
             int next=0;
             while (mapa.size() > 0) {
@@ -173,8 +178,12 @@ public class Controlador {
                 String nombreproceso = obtenerNombreProcesoU(mapa);
                 String nombrekey = getNombreKey(nombreproceso);
                 int rafaga = obtenerRafagaProcesoU(mapa);
-                // tomar el proceso de la cola 
-                BCP proceso = inicializarProcesos(nombrekey,cpu,indice,next);
+                // ver cantidad de rafagas ejecutadas
+                int getindice = getIndiceKey(mapaRegistro,nombreproceso);
+                int nrafaga = getRafagaEjecutada(mapaRegistro,nombrekey,getindice);
+                System.out.println("rafaga "+nombrekey+" "+nrafaga+" "+getindice+" "+nombreproceso);
+                // tomar el proceso de la cola  
+                BCP proceso = inicializarProcesos(nombrekey,indice,next,nrafaga);
                 //ejecutar
                 boolean stop = false;
                 int i = proceso.getBase();
@@ -196,10 +205,10 @@ public class Controlador {
                 }
                 if (stop) break;
                 // finalizar proceso
-                finalizarProceso(proceso,indice);
+                finalizarProceso(proceso,indice,nrafaga);
                 
                 indice += 16;
-                cpu++;
+                
                 next++;
                 //fcfs sacar de la cola
                // pc.getPlanificador().eliminarProceso(nombreproceso);
@@ -352,26 +361,24 @@ public class Controlador {
     /*
     ===========================FUNCIONES ALGORITMOS AUX==========================
     */
-    public BCP inicializarProcesos(String nombre,int cpu,int indice, int next){
+    public BCP inicializarProcesos(String nombre,int indice, int next,int rafagaEjecutada){
         BCP proceso = pc.getPlanificador().obeterProceso(nombre);
-        if(cpu>5){
-            proceso.setEstado("nuevo");
-            proceso.setCpuAsig("hilo"+cpu);
-            cpu =1;
-        }
-        proceso.setCpuAsig("hilo"+cpu);
-        String enlace = getEnlace(next);
-        proceso.setSiguiente(enlace);
-        preparadoBCP(proceso, indice);//este para añadir el nuevo a los estados
-        // pasar a preparado
-        proceso.setEstado("preparado");
-        updateBCP(proceso, indice);
+       
+        proceso.setSiguiente(getEnlace(next));
 
-        // pasar a ejecucion
-        proceso.setEstado("ejecucion");
-        proceso.setTiempoInicio(System.currentTimeMillis());
-        updateBCP(proceso, indice);
-        
+        if(proceso.getEstado().equals("nuevo") || proceso.getEstado().equals("espera")){
+            updateBCP(proceso, indice);
+            proceso.setEstado("preparado");
+            updateBCP(proceso, indice);
+         
+        }
+        // pasar a preparado: si esta preparado es por que ya fue ejecutado y esta esperando reanudar su ejecucion
+        if(proceso.getEstado().equals("preparado")){
+            proceso.setEstado("ejecucion");
+            proceso.setTiempoInicio(System.currentTimeMillis());
+            updateBCP(proceso, indice);
+        }
+
         // ejecutar instrucciones
         int i = proceso.getBase();
         proceso.setPc(i);
@@ -425,8 +432,13 @@ public class Controlador {
         agregarFila(pc.getPila());
         System.out.println("pc"+ proceso.getPc());
     }
-    public void finalizarProceso(BCP proceso,int indice){
-        proceso.setEstado("finalizado");
+    public void finalizarProceso(BCP proceso,int indice,int rafagaEjecutada){
+        if(rafagaEjecutada < proceso.getAlcance()){
+            proceso.setEstado("espera");
+        }else{
+            proceso.setEstado("finalizado");
+        }
+    
         proceso.setTiempoFin(System.currentTimeMillis());
         proceso.setTiempoTotal(proceso.getTiempoFin() - proceso.getTiempoInicio());
         est.agregar(proceso.getIdProceso(), proceso.getTiempoTotal()); 
@@ -437,8 +449,17 @@ public class Controlador {
     /*
     ===========================OTRAS FUNCIONES==========================
     */
-    
-    
+    public void updateEstados(String valor1,String valor2){
+        view.addFilaEstados(valor1, valor2);
+        
+    }
+    //ya no se usa
+    public void preparadoBCP(BCP proceso,int indice){
+        pc.guardarBCPMemoria(proceso,indice);
+        addMemoria(proceso,indice);
+        updateEstados(Integer.toString(proceso.getIdProceso()),proceso.getEstado());
+            
+    }
 
     public void updateBCP(BCP proceso,int indice){
         pc.guardarBCPMemoria(proceso,indice);
@@ -456,12 +477,7 @@ public class Controlador {
         }
         return enlace;
     }
-    public void preparadoBCP(BCP proceso,int indice){
-        pc.guardarBCPMemoria(proceso,indice);
-        addMemoria(proceso,indice);
-        updateEstados(Integer.toString(proceso.getIdProceso()),proceso.getEstado());
-            
-    }
+
     public void agregarEstadosTabla(List<String> archivos){
         int i=0;
         for(String arch:archivos){
@@ -470,10 +486,7 @@ public class Controlador {
         }
     }
 
-    public void updateEstados(String valor1,String valor2){
-        view.addFilaEstados(valor1, valor2);
-        
-    }
+
  
     public void updateMemoria(String instr){ 
         int star = pc.getCPU().getPC();

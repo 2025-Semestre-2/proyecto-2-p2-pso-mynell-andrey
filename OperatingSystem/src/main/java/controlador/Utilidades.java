@@ -64,7 +64,45 @@ public class Utilidades {
             mapa.remove(primeraClave);
         }
     }
-
+    public static String getNombreKey(String pkey) { 
+        String[] partes = pkey.split("_");
+        return partes[0]; 
+    }
+    public static Integer getIndiceKey(HashMap<String, ArrayList<Integer>> mapa,String nombre) {
+        List<Map.Entry<String, ArrayList<Integer>>> lista = new ArrayList<>(mapa.entrySet());
+   
+        int indice =-1;
+        lista.size();
+        for (int i = 0; i<lista.size();i++) {
+             String comp = lista.get(i).getKey();
+         
+             if (comp.equals(nombre)) {
+                 indice =i;  
+                 break;
+             }
+        }
+     
+        return indice;
+    }
+    
+    public static Integer getRafagaEjecutada(HashMap<String, ArrayList<Integer>> mapa,String nombre,int pos) {
+        List<Map.Entry<String, ArrayList<Integer>>> lista = new ArrayList<>(mapa.entrySet());
+        
+        int rafaga =0;
+        for (int i = 0; i<=pos;i++) {
+             String comp = lista.get(i).getKey();
+             comp = getNombreKey(comp);
+     
+             if (comp.equals(nombre)) {
+                 int r = lista.get(i).getValue().get(1);
+                 rafaga+=r;  
+                 
+             }
+        }
+        return rafaga;
+    }
+    
+    
     public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosFCFS(HashMap<String, ArrayList<Integer>> mapa) {
         List<Map.Entry<String, ArrayList<Integer>>> lista = new ArrayList<>(mapa.entrySet());
         lista.sort((e1, e2) -> {
@@ -189,10 +227,7 @@ public class Utilidades {
 
 
     }
-    public static String getNombreKey(String pkey) { 
-        String[] partes = pkey.toString().split("_");
-        return partes[0]; 
-    }
+    
     public static LinkedHashMap<String, ArrayList<Integer>> ajustarSalidaSRT(HashMap<String, ArrayList<Integer>> mapa) { 
         List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet()); 
         LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>(); 
@@ -274,8 +309,4 @@ public class Utilidades {
             }
             return mapaOrdenado; 
         }
-
-    
-
-
 }

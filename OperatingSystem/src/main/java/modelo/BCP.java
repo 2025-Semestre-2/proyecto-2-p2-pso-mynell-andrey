@@ -220,6 +220,7 @@ public class BCP {
                 ", prioridad=" + prioridad +
                 ", base=" + base +
                 ", alcance=" + alcance +
+                ", hilo=" + cpuAsig +
                 ", archivos=" + archivos +
                 '}';
     }

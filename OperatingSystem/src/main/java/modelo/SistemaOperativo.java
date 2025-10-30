@@ -385,6 +385,7 @@ public class SistemaOperativo {
     public void crearProcesos(){
         int contProceso=0;
         List<String> archAcc = new ArrayList<>();
+        int cpu=1;
         for(int i=0;i<getIntr().size();i++){
             String instru = disco.getDisco(i);
             if(instru.contains("|")){
@@ -394,13 +395,16 @@ public class SistemaOperativo {
                 int base = Integer.parseInt(partes[1]);
                 int alcance = Integer.parseInt(partes[2]);
                 String estado ;
-                if(i<5){estado="nuevo";}
-                else {estado = "espera";}
+                if(i<3){estado="nuevo";}//<5
+                else {estado = "nuevo";cpu=1;}
                 archAcc.add(nombreArchivo);
                 BCP bcp = new BCP(contProceso++,estado,i+1,base,alcance);
+                bcp.setCpuAsig("Hilo "+cpu);
+                
                 bcp.getArchivos().addAll(archAcc);
-        
+                System.out.println(bcp.toString());
                 plan.agregarProceso(nombreArchivo,bcp);
+                cpu++;
                 
             }
         } 
