@@ -154,6 +154,12 @@ public class Controlador {
               
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
+            case "HRRN": 
+                System.out.println("hrrn"+ordenarProcesosSJF(view.getProcesosTabla()));
+                ordenarProcesos = ordenarProcesosHRRN(view.getProcesosTabla());
+              
+                ejecutarAlgoritmo(ordenarProcesos);
+                break;
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               break;

@@ -309,4 +309,49 @@ public class Utilidades {
             }
             return mapaOrdenado; 
         }
+        
+        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosHRRN(HashMap<String, ArrayList<Integer>> mapa) {
+            List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet());
+            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
+
+            int tiempo = 0;
+            while (!procesos.isEmpty()) {
+                // Procesos que ya llegaron
+                List<Map.Entry<String, ArrayList<Integer>>> disponibles = new ArrayList<>();
+                for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
+                    if (p.getValue().get(0) <= tiempo) { // tiempo de llegada <= tiempo actual
+                        disponibles.add(p);
+                    }
+                }
+
+                if (disponibles.isEmpty()) {
+                    tiempo++;
+                    continue;
+                }
+
+                // Calcular RR (Response Ratio) = (Espera + Ráfaga) / Ráfaga
+                Map.Entry<String, ArrayList<Integer>> siguiente = disponibles.get(0);
+                double mayorRR = -1;
+
+                for (Map.Entry<String, ArrayList<Integer>> p : disponibles) {
+                    int llegada = p.getValue().get(0);
+                    int rafaga = p.getValue().get(1);
+                    int espera = tiempo - llegada;
+                    double rr = (double) (espera + rafaga) / rafaga;
+
+                    if (rr > mayorRR) {
+                        mayorRR = rr;
+                        siguiente = p;
+                    }
+                }
+
+                // Ejecutar proceso seleccionado
+                mapaOrdenado.put(siguiente.getKey(), siguiente.getValue());
+                tiempo += siguiente.getValue().get(1); // avanzar el tiempo
+                procesos.remove(siguiente);
+            }
+
+            return mapaOrdenado;
+        }
+
 }
