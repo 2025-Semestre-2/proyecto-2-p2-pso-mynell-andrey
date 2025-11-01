@@ -27,8 +27,10 @@ public class Controlador {
     private Estadisticas est;
     private int indiceArch = 0;
     //var glob para paso a paso
+    private final Object lock = new Object();
     private int contador =0;
-    private boolean inicializado = false;
+    private boolean modoPasoPaso = false;
+    private boolean hiloIniciado = false;
     private BCP procesoActual = null;
     private int pos = 0;
     
@@ -44,7 +46,20 @@ public class Controlador {
         this.view.btnEjecutar(e -> modoEjecucion());
         this.view.btnLimpiar(e -> cleanAll());
         this.view.btnReset(e -> clean());
-        this.view.btnPasoListener(e -> ejecutarPasoPaso());
+        this.view.btnPasoListener(e -> {
+            if (!hiloIniciado) {
+                // Primer clic: inicia el modo paso a paso
+                modoPasoPaso = true;
+                hiloIniciado = true;
+                modoEjecucion();
+            } else {
+                // Clics siguientes: avanzan una instrucción
+                synchronized (lock) {
+                    lock.notify();
+                }
+            }
+        
+        });
         try {
             this.view.setDiskSize(pc.getDisco().size());
         } catch (IOException ex) {
@@ -89,18 +104,15 @@ public class Controlador {
     
         String tipo = view.getCBoxCPU().toString();
         System.out.println(view.getProcesosTabla());
-        
-        
-        
-        HashMap<String, ArrayList<Integer>> ordenarProcesos;
-        
+        HashMap<String, ArrayList<Integer>> ordenarProcesos; 
               
         switch(tipo){
             case "FCFS": 
                 System.out.println("fcfs"+ordenarProcesosFCFS(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
-                
                 ejecutarAlgoritmo(ordenarProcesos);
+                
+                
                 break;
             
             case "SJF": 
@@ -164,6 +176,8 @@ public class Controlador {
         pc.inicializarSO(sizeMemoria);
         pc.crearProcesos();
         crearProcesos();
+        //paso paso 
+        pos =pc.getBCP().getPc();
  
     }
     
@@ -199,7 +213,18 @@ public class Controlador {
                         stop = procesarResultado(res);
                         if (stop) break;
                     
-                        esperar(pc.getTimer(instr));
+                        if (modoPasoPaso) {
+                            synchronized (lock) {
+                                try {
+                                    //espera otro click
+                                    lock.wait();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                        } else {
+                            esperar(pc.getTimer(instr)); // automático
+                        }
                         // actualizar UI de memoria y BCP en el hilo de Swing
                         actualizarUI(proceso,indice,proceso.getIdProceso());
                     }
@@ -217,148 +242,8 @@ public class Controlador {
             }
         }).start(); 
     }
-    public void ejecutarPasoPaso(){
-        if(!inicializado){
-            int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
-            int sizeDisco = (Integer) view.getSpnDisco().getValue();
-            try {
-            pc.tamannoDisco(sizeDisco);
-            pc.tamannoMemoria(sizeMemoria);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Error al inicializar el disco: " + e.getMessage());
-                return;
-            }
-
-            //inicializo
-            pc.inicializarSO(sizeMemoria);
-
-            //guardarEnDisco();
-            pc.crearProcesos();
-          
-            inicializado=true;
-            pos =pc.getBCP().getPc();
-     
-
-            
-            
-        }
-        
-        planificadorTrabajosPasoPaso();
-        
-    }
-    public void planificadorTrabajosPasoPaso() {
-        int cpu=0;
-        int next=0;
-
-        if(procesoActual==null){
-            if(pc.getPlanificador().sizeProceso() == 0){
-                JOptionPane.showMessageDialog(null, "Error: No hay procesos en cola");
-                return;
-            }
-            
-            // tomar el proceso de la cola
-            procesoActual = pc.getPlanificador().obtenerSiguienteProceso();
-            if(cpu>5){
-                    procesoActual.setEstado("nuevo");
-                    procesoActual.setCpuAsig("hilo"+cpu);
-                    cpu =1;
-                }
-            procesoActual.setCpuAsig("hilo"+cpu);
-            String enlace = getEnlace(next);
-            procesoActual.setSiguiente(enlace);
-            preparadoBCP(procesoActual, pos);//este para añadir el nuevo a los estados
-            // pasar a preparado
-            procesoActual.setEstado("preparado");
-            
-            preparadoBCP(procesoActual, pos);
-
-            // pasar a ejecucion
-            procesoActual.setEstado("ejecucion");
-            procesoActual.setTiempoInicio(System.currentTimeMillis());
-            updateBCP(procesoActual, pos);
-
-            int i = procesoActual.getBase();
-            procesoActual.setPc(i); 
-            
-
-        }         
-        
-
-        // ejecutar instrucciones}
-        int posIntr = procesoActual.getPc(); 
-        System.out.println("pos"+posIntr);
-        if(contador < procesoActual.getAlcance()) {
-            String instr = pc.getDisco().getDisco(posIntr);
-            if (instr != null) {
-                pc.getCPU().setIR(instr);
-                this.view.jTable3.changeSelection(posIntr, posIntr, false, false);
-                String res = pc.interprete(instr, procesoActual);
-                switch(res){
-                    case "": break;
-                    case "~Exit": 
-                        
-                        break;
-                    case "~Input": 
-                        this.view.jTextField1.selectAll();
-                        new Thread(() -> {
-                            CountDownLatch latch = new CountDownLatch(1);
-                            final String[] dato = new String[1];
-                            this.view.jTextField1.addActionListener(e ->{
-                                dato[0] = this.view.jTextField1.getText();
-                                this.view.jTextField1.setText("");
-                                latch.countDown();
-                            });
-                            {
-                                try {
-                                    this.view.btnPaso.setEnabled(false);
-                                    latch.await();
-                                    this.pc.movRegistro("DX", Integer.parseInt(dato[0]));
-                                    this.view.btnPaso.setEnabled(true);
-                                } catch (InterruptedException ex) {
-                                    System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-                                }
-                            }
-                        }).start();
-                        break;
-
-                    default:
-                        view.jTextArea1.append(res+"\n");
-                        break;
-                }
-                //procesoActual.setPc(posIntr + 1);
-
-                // actualizar UI de memoria y BCP en el hilo de Swing
-                pc.actualizarBCPDesdeCPU(procesoActual.getIdProceso(),procesoActual);
-                pc.guardarBCPMemoria(procesoActual, pos);
-                updateMemoria(procesoActual, pos);
-                actualizarBCP(procesoActual,procesoActual.getIdProceso());
-                agregarFila(pc.getPila());
-
-            }
-            contador++;
-            next++;
-            
-            
-        }
-        else{
-            // finalizar proceso
-            
-            procesoActual.setEstado("finalizado");
-            procesoActual.setTiempoFin(System.currentTimeMillis());
-            procesoActual.setTiempoTotal(procesoActual.getTiempoFin() - procesoActual.getTiempoInicio());
-            est.agregar(procesoActual.getIdProceso(), procesoActual.getTiempoTotal()); 
-
-            updateBCP(procesoActual, pos);
-            agregarEstadosTabla(procesoActual.getArchivos());
-            pc.getPlanificador().eliminarSiguienteProceso();
-            pos += 16; //indice
-            contador =0; // contador
-            procesoActual=null;
-            cpu++;
 
 
-        }
-    }
     /*
     ===========================FUNCIONES ALGORITMOS AUX==========================
     */
@@ -456,13 +341,6 @@ public class Controlador {
         view.addFilaEstados(valor1, valor2);
         
     }
-    //ya no se usa
-    public void preparadoBCP(BCP proceso,int indice){
-        pc.guardarBCPMemoria(proceso,indice);
-        addMemoria(proceso,indice);
-        updateEstados(Integer.toString(proceso.getIdProceso()),proceso.getEstado());
-            
-    }
 
     public void updateBCP(BCP proceso,int indice){
         pc.guardarBCPMemoria(proceso,indice);
@@ -488,33 +366,13 @@ public class Controlador {
             i++;
         }
     }
-
-
  
     public void updateMemoria(String instr){ 
         int star = pc.getCPU().getPC();
         view.addFilaMemoria(Integer.toString(star), instr);
         
     }
-    public void addMemoria(BCP bcp, int posicion){
-        view.addFilaMemoria(Integer.toString(posicion++),"p"+bcp.getIdProceso());
-        view.addFilaMemoria(Integer.toString(posicion++),bcp.getEstado());
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getPc()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getBase()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getAlcance()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getAc()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getAx()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getBx()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getCx()));
-        view.addFilaMemoria(Integer.toString(posicion++),Integer.toString(bcp.getDx()));
-        view.addFilaMemoria(Integer.toString(posicion++),bcp.getIr());
-        view.addFilaMemoria(Integer.toString(posicion++),bcp.getSiguiente());
-        view.addFilaMemoria(Integer.toString(posicion++),Long.toString(bcp.getTiempoInicio()));
-        view.addFilaMemoria(Integer.toString(posicion++),Long.toString(bcp.getTiempoFin()));
-        view.addFilaMemoria(Integer.toString(posicion++),Long.toString(bcp.getTiempoTotal()));
-        view.addFilaMemoria(Integer.toString(posicion++), bcp.getPila().toString());
-        view.addFilaMemoria(Integer.toString(posicion++), String.join(",", bcp.getArchivos()));
-    }
+
     public void updateMemoria(BCP bcp, int posicion){
         view.updateFilaMemoria(posicion,Integer.toString(posicion++),"p"+bcp.getIdProceso());
         view.updateFilaMemoria(posicion,Integer.toString(posicion++),bcp.getEstado());
@@ -633,7 +491,7 @@ public class Controlador {
         estadistica = new Estadistica();
         est = new Estadisticas();
         contador =0;
-        inicializado = false;
+     
         procesoActual = null;
         pos = 0;
         pc.tamannoMemoria(512);
@@ -642,6 +500,8 @@ public class Controlador {
         showRam();
         indiceArch=0;
         inicializarSO();
+        modoPasoPaso = false;
+        hiloIniciado = false;
     }
     
     public void cleanAll(){
