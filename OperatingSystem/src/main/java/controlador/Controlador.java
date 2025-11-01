@@ -184,6 +184,7 @@ public class Controlador {
                 System.out.println("rafaga "+nombrekey+" "+nrafaga+" "+getindice+" "+nombreproceso);
                 // tomar el proceso de la cola  
                 BCP proceso = inicializarProcesos(nombrekey,indice,next,nrafaga);
+                System.out.println("id"+proceso.getIdProceso());
                 //ejecutar
                 boolean stop = false;
                 int i = proceso.getBase();
@@ -200,7 +201,7 @@ public class Controlador {
                     
                         esperar(pc.getTimer(instr));
                         // actualizar UI de memoria y BCP en el hilo de Swing
-                        actualizarUI(proceso,indice);
+                        actualizarUI(proceso,indice,proceso.getIdProceso());
                     }
                 }
                 if (stop) break;
@@ -327,10 +328,10 @@ public class Controlador {
                 //procesoActual.setPc(posIntr + 1);
 
                 // actualizar UI de memoria y BCP en el hilo de Swing
-                pc.actualizarBCPDesdeCPU(procesoActual);
+                pc.actualizarBCPDesdeCPU(procesoActual.getIdProceso(),procesoActual);
                 pc.guardarBCPMemoria(procesoActual, pos);
                 updateMemoria(procesoActual, pos);
-                actualizarBCP(procesoActual);
+                actualizarBCP(procesoActual,procesoActual.getIdProceso());
                 agregarFila(pc.getPila());
 
             }
@@ -424,11 +425,11 @@ public class Controlador {
             }
         }
     }
-    public void actualizarUI(BCP proceso,int indice){
-        pc.actualizarBCPDesdeCPU(proceso);
+    public void actualizarUI(BCP proceso,int indice,int id){
+        pc.actualizarBCPDesdeCPU(proceso.getIdProceso(),proceso);
         pc.guardarBCPMemoria(proceso, indice);
         updateMemoria(proceso, indice);
-        actualizarBCP(proceso);
+        actualizarBCP(proceso,id);
         agregarFila(pc.getPila());
         System.out.println("pc"+ proceso.getPc());
     }
@@ -444,6 +445,8 @@ public class Controlador {
         est.agregar(proceso.getIdProceso(), proceso.getTiempoTotal()); 
         updateBCP(proceso, indice);
         agregarEstadosTabla(proceso.getArchivos());
+        System.out.println(pc.getBCP().toString());
+     
         
     }
     /*
@@ -533,13 +536,14 @@ public class Controlador {
     }
 
 
-    public void actualizarBCP(BCP bcp){
-        view.setlbIBX(Integer.toString(bcp.getBx()));
+    public void actualizarBCP(BCP bcp,int id){
+
+        view.setlbIBX(Integer.toString(bcp.getRegistro(id,"BX")));
         view.setlbIR(pc.binario(bcp.getIr()));
-        view.setlblAC(Integer.toString(bcp.getAc()));
-        view.setlblAX(Integer.toString(bcp.getAx()));
-        view.setlblCX(Integer.toString(bcp.getCx()));
-        view.setlblDX(Integer.toString(bcp.getDx()));
+        view.setlblAC(Integer.toString(bcp.getRegistro(id,"AC")));
+        view.setlblAX(Integer.toString(bcp.getRegistro(id,"AX")));
+        view.setlblCX(Integer.toString(bcp.getRegistro(id,"CX")));
+        view.setlblDX(Integer.toString(bcp.getRegistro(id,"DX")));
         view.setlblPC(Integer.toString(bcp.getPc())); 
         
         view.setlbEnlace(bcp.getSiguiente());

@@ -372,13 +372,20 @@ public class SistemaOperativo {
         
     }
     //bcp
-    public void actualizarBCPDesdeCPU(BCP bcp) {
+    public void actualizarBCPDesdeCPU(int id,BCP bcp) {
         bcp.setAc(cpu.getAC());
         bcp.setAx(cpu.getAX());
         bcp.setBx(cpu.getBX());
         bcp.setCx(cpu.getCX());
         bcp.setDx(cpu.getDX());
         bcp.setIr(cpu.getIR());
+        bcp.setRegistro(id,"ac",cpu.getAC());
+        bcp.setRegistro(id,"ax",cpu.getAX());
+        bcp.setRegistro(id,"bx",cpu.getBX());
+        bcp.setRegistro(id,"cx",cpu.getCX());
+        bcp.setRegistro(id,"dx",cpu.getDX());
+ 
+        
     }
     
 

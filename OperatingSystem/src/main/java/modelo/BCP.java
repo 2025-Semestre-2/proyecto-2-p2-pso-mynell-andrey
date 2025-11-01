@@ -5,11 +5,14 @@
 package modelo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 
 public class BCP {
+    private static HashMap<Integer, Map<String, Integer>> registrosProcesos = new HashMap<>();
     private int idProceso;
     private String estado; //nuevo, preparado, ejecución, en espera, finalizado  
     private int prioridad;
@@ -44,6 +47,8 @@ public class BCP {
         this.archivos = new ArrayList<>();
         this.tiempoInicio = System.currentTimeMillis();
         this.tiempoTotal = 0;
+        
+        inicializarRegistros();
     }
     public BCP() {
         this.estado = estado;
@@ -57,7 +62,34 @@ public class BCP {
         this.tiempoTotal = 0;
     }
     //mas getter y setter
+    private void inicializarRegistros() {
+        Map<String, Integer> registros = new HashMap<>();
+        registros.put("AC", 0);
+        registros.put("AX", 0);
+        registros.put("BX", 0);
+        registros.put("CX", 0);
+        registros.put("DX", 0);
 
+        registrosProcesos.put(idProceso, registros);
+    }
+       public void setRegistro(int id, String nombre, int valor) {
+        Map<String, Integer> registros = registrosProcesos.get(id);
+        if (registros != null) {
+            registros.put(nombre.toUpperCase(), valor);
+        }
+    }
+
+    public int getRegistro(int id, String nombre) {
+        Map<String, Integer> registros = registrosProcesos.get(id);
+        if (registros != null && registros.containsKey(nombre.toUpperCase())) {
+            return registros.get(nombre.toUpperCase());
+        }
+        return 0;
+    }
+
+    public Map<String, Integer> getRegistros() {
+        return registrosProcesos.get(idProceso);
+    }
     
      public String getCpuAsig() {
         return cpuAsig;
@@ -157,6 +189,7 @@ public class BCP {
 
     public void setPc(int pc) {
         this.pc = pc;
+        
     }
 
     public void setBase(int base) {
@@ -169,26 +202,33 @@ public class BCP {
 
     public void setAc(int ac) {
         this.ac = ac;
+       
     }
 
     public void setAx(int ax) {
         this.ax = ax;
+        
     }
 
     public void setBx(int bx) {
         this.bx = bx;
+  
+        
     }
 
     public void setCx(int cx) {
         this.cx = cx;
+        
     }
 
     public void setDx(int dx) {
         this.dx = dx;
+      
     }
 
     public void setIr(String ir) {
         this.ir = ir;
+        
     }
 
     public void setPila(Stack<Integer> pila) {
@@ -222,6 +262,7 @@ public class BCP {
                 ", alcance=" + alcance +
                 ", hilo=" + cpuAsig +
                 ", archivos=" + archivos +
+                ", archivos=" + registrosProcesos  +
                 '}';
     }
 
