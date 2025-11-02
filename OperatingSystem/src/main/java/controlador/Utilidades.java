@@ -353,6 +353,60 @@ public class Utilidades {
 
             return mapaOrdenado;
         }
+        
+        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosCFS(HashMap<String, ArrayList<Integer>> mapa) {
+            List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet());
+            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
+
+            HashMap<String, Double> vruntime = new HashMap<>();
+            for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
+                vruntime.put(p.getKey(), 0.0);
+            }
+
+            int tiempo = 0;
+            double quantum = 1.0;
+
+            HashMap<String, Integer> tiempoRestante = new HashMap<>();
+            for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
+                tiempoRestante.put(p.getKey(), p.getValue().get(1));
+            }
+
+            while (!tiempoRestante.isEmpty()) {
+                List<String> disponibles = new ArrayList<>();
+                for (String nombre : tiempoRestante.keySet()) {
+                    int llegada = mapa.get(nombre).get(0);
+                    if (llegada <= tiempo) {
+                        disponibles.add(nombre);
+                    }
+                }
+
+                if (disponibles.isEmpty()) {
+                    tiempo++;
+                    continue;
+                }
+                String siguiente = disponibles.get(0);
+                for (String p : disponibles) {
+                    if (vruntime.get(p) < vruntime.get(siguiente)) {
+                        siguiente = p;
+                    }
+                }
+
+                int restante = tiempoRestante.get(siguiente);
+                int ejecutar = (int) Math.min(quantum, restante);
+                tiempo += ejecutar;
+
+                tiempoRestante.put(siguiente, restante - ejecutar);
+                vruntime.put(siguiente, vruntime.get(siguiente) + ejecutar);
+
+                if (tiempoRestante.get(siguiente) == 0) {
+                    mapaOrdenado.put(siguiente, mapa.get(siguiente));
+                    tiempoRestante.remove(siguiente);
+                }
+            }
+            return mapaOrdenado;
+        }
+
+        
         private static final String REGISTRO = "(AX|BX|CX|DX)";
         private static final String ENTERO = "(-?\\d+)";
         private static final String ETIQUETA = "[A-Za-z_][A-Za-z0-9_]*";

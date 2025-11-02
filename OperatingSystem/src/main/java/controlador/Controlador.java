@@ -160,6 +160,12 @@ public class Controlador {
               
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
+            case "CFS": 
+                System.out.println("cfs"+ordenarProcesosSJF(view.getProcesosTabla()));
+                ordenarProcesos = ordenarProcesosCFS(view.getProcesosTabla());
+              
+                ejecutarAlgoritmo(ordenarProcesos);
+                break;
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               break;
