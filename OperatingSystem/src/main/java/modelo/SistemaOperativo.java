@@ -7,6 +7,8 @@ package modelo;
 import java.io.IOException;
 import java.util.*;
 import javax.swing.JOptionPane;
+import static modelo.Memoria.particionesFija;
+import controlador.Particion;
 
 
 public class SistemaOperativo {
@@ -405,16 +407,33 @@ public class SistemaOperativo {
                 if(i<3){estado="nuevo";}//<5
                 else {estado = "nuevo";cpu=1;}
                 archAcc.add(nombreArchivo);
-                BCP bcp = new BCP(contProceso++,estado,i+1,base,alcance);
+                BCP bcp = new BCP(contProceso,estado,i+1,base,alcance);
                 bcp.setCpuAsig("Hilo "+cpu);
-                
+           
                 bcp.getArchivos().addAll(archAcc);
                 System.out.println(bcp.toString());
+                
                 plan.agregarProceso(nombreArchivo,bcp);
                 cpu++;
+                contProceso++;
+            
                 
             }
         } 
+        crearParticiones();
+        System.out.println(particionesFija);
+    }
+    public void crearParticiones(){
+        particionesFija.clear();
+        int contProceso=0;
+        int inicio = getEspacioSO(memoria.size());
+        while(inicio<memoria.size()){
+            particionesFija.put(contProceso,new Particion(inicio,32,false));
+            contProceso++;
+            inicio+=32;
+        }
+       
+ 
     }
     public void guardarBCPMemoria(BCP bcp, int posicion){
         memoria.setMemoria(posicion++,"p"+bcp.getIdProceso());

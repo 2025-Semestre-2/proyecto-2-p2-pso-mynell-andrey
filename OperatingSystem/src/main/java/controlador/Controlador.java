@@ -28,12 +28,9 @@ public class Controlador {
     private int indiceArch = 0;
     //var glob para paso a paso
     private final Object lock = new Object();
-    private int contador =0;
     private boolean modoPasoPaso = false;
     private boolean hiloIniciado = false;
-    private BCP procesoActual = null;
-    private int pos = 0;
-    
+
 
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
@@ -182,26 +179,36 @@ public class Controlador {
         pc.inicializarSO(sizeMemoria);
         pc.crearProcesos();
         crearProcesos();
-        //paso paso 
-        pos =pc.getBCP().getPc();
+
  
+    }
+    public void actualizarMemoria(){
+        int sizeMemoria = (Integer) view.getSpnMemoria().getValue();
+         pc.tamannoMemoria(sizeMemoria);
+ 
+        //inicializo
+        pc.inicializarSO(sizeMemoria);
+        pc.crearProcesos();
+
     }
     
 
     public void ejecutarAlgoritmo(HashMap<String, ArrayList<Integer>> mapa) {
         LinkedHashMap<String, ArrayList<Integer>> mapaRegistro = new LinkedHashMap<>(mapa);
         new Thread(() -> {   
-            int indice = pc.getBCP().getPc();
             int next=0;
+      
+      
             while (mapa.size() > 0) {
-                //fcfs
+                //memoria
+                int indice = modoGuardado();
+                System.out.println("indice:"+indice);
+                //algortimos
                 String nombreproceso = obtenerNombreProcesoU(mapa);
                 String nombrekey = getNombreKey(nombreproceso);
                 int rafaga = obtenerRafagaProcesoU(mapa);
-                // ver cantidad de rafagas ejecutadas
                 int getindice = getIndiceKey(mapaRegistro,nombreproceso);
                 int nrafaga = getRafagaEjecutada(mapaRegistro,nombrekey,getindice);
-                System.out.println("rafaga "+nombrekey+" "+nrafaga+" "+getindice+" "+nombreproceso);
                 // tomar el proceso de la cola  
                 BCP proceso = inicializarProcesos(nombrekey,indice,next,nrafaga);
                 System.out.println("id"+proceso.getIdProceso());
@@ -238,17 +245,56 @@ public class Controlador {
                 if (stop) break;
                 // finalizar proceso
                 finalizarProceso(proceso,indice,nrafaga);
-                
-                indice += 16;
-                
                 next++;
-                //fcfs sacar de la cola
-               // pc.getPlanificador().eliminarProceso(nombreproceso);
                 eliminarProcesoU(mapa,nombreproceso);
+               // librarGuardado(obtenerKeyIndice(indice));
+                
             }
         }).start(); 
     }
+    public int modoGuardado(){
+        String tipo = view.getCBoxMemoria().toString();
+              
+        switch(tipo){
+            case "Fija": 
+                Particion particionLibre = pc.getMemoria().obtenerParticionLibre();
+                if(particionLibre==null){
+                    JOptionPane.showMessageDialog(null, "Error, no hay particiones libres");
+                    return -1;
+                }
+                particionLibre.setOcupado(true);
+                System.out.println("pp"+particionLibre);
+               
+                return particionLibre.getBase();
+              
+            
+            case "Dinámica": 
 
+                return -1;
+            default:
+              JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
+              return -1;
+        
+        }
+        
+    }
+        public void librarGuardado(int id){
+        String tipo = view.getCBoxMemoria().toString();
+              
+        switch(tipo){
+            case "Fija": 
+                pc.getMemoria().liberarParticion(id);
+                break;
+            
+            case "Dinámica": 
+
+                break;
+            default:
+              JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
+              break;
+        
+        }
+    }
 
     /*
     ===========================FUNCIONES ALGORITMOS AUX==========================
@@ -459,6 +505,7 @@ public class Controlador {
         System.out.println("i"+inicio+" "+sizeMemoria);
         guardarRam(inicio,sizeMemoria,"<user>");
         guardarRam(sizeMemoria,sizeMemoria+64,"<virtual>");
+        actualizarMemoria();
     }
     public void guardarRam(int inicio,int rango, String val){
         
@@ -504,10 +551,6 @@ public class Controlador {
         pc = new SistemaOperativo();
         estadistica = new Estadistica();
         est = new Estadisticas();
-        contador =0;
-     
-        procesoActual = null;
-        pos = 0;
         pc.tamannoMemoria(512);
         
         showDisk();
