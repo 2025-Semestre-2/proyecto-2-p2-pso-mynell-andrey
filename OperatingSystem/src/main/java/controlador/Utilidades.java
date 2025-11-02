@@ -353,5 +353,68 @@ public class Utilidades {
 
             return mapaOrdenado;
         }
+        private static final String REGISTRO = "(AX|BX|CX|DX)";
+        private static final String ENTERO = "(-?\\d+)";
+        private static final String ETIQUETA = "[A-Za-z_][A-Za-z0-9_]*";
+        private static final String VALORES = "([A-Za-z0-9_,\\s]*)";
+
+        public static boolean validarLinea(String linea) {
+            linea = linea.trim().toUpperCase();
+
+            // Instrucciones básicas
+            String regexLOAD = "LOAD\\s+" + REGISTRO;
+            String regexSTORE = "STORE\\s+" + REGISTRO;
+            String regexMOV = "MOV\\s+" + REGISTRO + "\\s*,\\s*(" + REGISTRO + "|" + ENTERO + ")";
+            String regexADD = "ADD\\s+" + REGISTRO;
+            String regexSUB = "SUB\\s+" + REGISTRO;
+            String regexINC = "INC\\s+" + REGISTRO;
+            String regexDEC = "DEC\\s+" + REGISTRO;
+
+            // Variantes especiales
+            String regexMOVS = "MOV\\s+" + REGISTRO + "\\s*,\\s*S";
+            String regexDECAX = "DEC\\s+AX";
+            String regexDECReg = "DEC\\s+" + REGISTRO;
+            String regexINCReg = "INC\\s+" + REGISTRO;
+            String regexSWAP = "SWAP\\s+" + REGISTRO + "\\s*,\\s*" + REGISTRO;
+
+            // Interrupciones
+            String regexINT20H = "INT\\s+20H";
+            String regexINT09H = "INT\\s+09H";
+            String regexINT10H = "INT\\s+10H";
+            String regexINT21H = "INT\\s+21H";
+
+            // Saltos y comparaciones
+            String regexJMP = "JMP\\s+" + ETIQUETA;
+            String regexCMP = "CMP\\s+" + REGISTRO + "\\s*,\\s*" + REGISTRO;
+            String regexJE = "JE\\s+" + ETIQUETA;
+            String regexJNE = "JNE\\s+" + ETIQUETA;
+
+            // Parámetros y pila
+            String regexPARAM = "PARAM\\s+" + VALORES;
+            String regexPUSH = "PUSH\\s+" + REGISTRO;
+            String regexPOP = "POP\\s+" + REGISTRO;
+
+            // Unir todas las posibles instrucciones
+            return linea.matches(regexLOAD) ||
+                   linea.matches(regexSTORE) ||
+                   linea.matches(regexMOV) ||
+                   linea.matches(regexMOVS) ||
+                   linea.matches(regexADD) ||
+                   linea.matches(regexSUB) ||
+                   linea.matches(regexINC) ||
+                   linea.matches(regexDEC) ||
+                   linea.matches(regexSWAP) ||
+                   linea.matches(regexINT20H) ||
+                   linea.matches(regexINT09H) ||
+                   linea.matches(regexINT10H) ||
+                   linea.matches(regexINT21H) ||
+                   linea.matches(regexJMP) ||
+                   linea.matches(regexCMP) ||
+                   linea.matches(regexJE) ||
+                   linea.matches(regexJNE) ||
+                   linea.matches(regexPARAM) ||
+                   linea.matches(regexPUSH) ||
+                   linea.matches(regexPOP);
+        }
 
 }

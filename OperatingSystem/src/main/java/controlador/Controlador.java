@@ -423,8 +423,16 @@ public class Controlador {
             for(File archivo: archivos){
                 try{
                     List<String> lista = leerArchivo(archivo);
-                    pc.guardarInstrucciones(archivo.getName(),lista);
-                    pc.getIntr();
+                    boolean valido =  true;
+                    for (int i =0;valido && i<lista.size();i++){
+                        valido &= validarLinea(lista.get(i));
+                    }
+                    if (valido){
+                        pc.guardarInstrucciones(archivo.getName(),lista);
+                        pc.getIntr();
+                    }else{
+                        JOptionPane.showMessageDialog(null, "Archivo con formato invalido");
+                    }
                 } catch(HeadlessException | IOException e){
                     JOptionPane.showMessageDialog(null, "No existe espacio suficiente en disco para cargar");
                 }
