@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.*;
@@ -109,21 +110,21 @@ public class Controlador {
                 System.out.println("fcfs"+ordenarProcesosFCFS(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosFCFS(view.getProcesosTabla());
                 ejecutarAlgoritmo(ordenarProcesos);
-                
-                
+                GanttSimpleNonPreemptive(ordenarProcesos);
                 break;
             
             case "SJF": 
                 System.out.println("spn"+ordenarProcesosSJF(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosSJF(view.getProcesosTabla());
-              
+                GanttSimpleNonPreemptive(ordenarProcesos);
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "SRT": 
         
                 System.out.println("srt"+ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla())));
-                ordenarProcesos = ajustarSalidaSRT(ordenarProcesosSRT(view.getProcesosTabla()));
-              
+                LinkedHashMap<String,ArrayList<Integer>> temp =ordenarProcesosSRT(view.getProcesosTabla());
+                ordenarProcesos = ajustarSalidaSRT(temp);
+                GanttSimple(temp);
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "RR":
@@ -149,19 +150,19 @@ public class Controlador {
                 System.out.println("q="+q);
                 System.out.println("rr"+ordenarProcesosRR(view.getProcesosTabla(),q));
                 ordenarProcesos = ordenarProcesosRR(view.getProcesosTabla(),q);
-              
+                GanttSimple(ordenarProcesos);
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "HRRN": 
                 System.out.println("hrrn"+ordenarProcesosSJF(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosHRRN(view.getProcesosTabla());
-              
+                GanttSimple(ordenarProcesos);
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             case "CFS": 
                 System.out.println("cfs"+ordenarProcesosSJF(view.getProcesosTabla()));
                 ordenarProcesos = ordenarProcesosCFS(view.getProcesosTabla());
-              
+                GanttSimple(ordenarProcesos);
                 ejecutarAlgoritmo(ordenarProcesos);
                 break;
             default:
@@ -598,4 +599,132 @@ public class Controlador {
             i++;
         }
     }
+    
+    /*
+    ===========================DIAGRAMADO==========================
+    */
+    
+    public void GanttSimple(HashMap<String, ArrayList<Integer>> mapaOrdenado) {
+        // Calcular tiempo total según la mayor columna de tiempo
+        int totalTiempo = 0;
+        for (Map.Entry<String, ArrayList<Integer>> entry : mapaOrdenado.entrySet()) {
+            int inicio = Integer.parseInt(entry.getKey().split("_")[1]);
+            int duracion = entry.getValue().get(1);
+            totalTiempo = Math.max(totalTiempo, inicio + duracion);
+        }
+
+        // Crear encabezados de columnas
+        String[] columnas = new String[totalTiempo + 1];
+        columnas[0] = "Proceso";
+        for (int i = 1; i <= totalTiempo; i++) {
+            columnas[i] = String.valueOf(i - 1);
+        }
+
+        // Obtener modelo y limpiarlo
+        DefaultTableModel model = this.view.getModelDiagram();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+
+        for (String col : columnas) {
+            model.addColumn(col);
+        }
+
+        // Agrupar ejecuciones por proceso
+        Map<String, List<int[]>> ejecucionesPorProceso = new LinkedHashMap<>();
+        for (Map.Entry<String, ArrayList<Integer>> entry : mapaOrdenado.entrySet()) {
+            String nombre = entry.getKey().split("_")[0];
+            int inicio = Integer.parseInt(entry.getKey().split("_")[1]);
+            int duracion = entry.getValue().get(1);
+
+            ejecucionesPorProceso.putIfAbsent(nombre, new ArrayList<>());
+            ejecucionesPorProceso.get(nombre).add(new int[]{inicio, duracion});
+        }
+
+        // Llenar filas
+        for (Map.Entry<String, List<int[]>> entry : ejecucionesPorProceso.entrySet()) {
+            String nombre = entry.getKey();
+            Object[] fila = new Object[totalTiempo + 1];
+            fila[0] = nombre;
+
+            // Pintar bloques según sus ejecuciones
+            for (int[] ejec : entry.getValue()) {
+                int inicio = ejec[0];
+                int duracion = ejec[1];
+                for (int t = inicio; t < inicio + duracion; t++) {
+                    fila[t + 1] = "██";
+                }
+            }
+
+            model.addRow(fila);
+        }
+
+        // Configurar JTable
+        JTable tabla = this.view.jTable26;
+        tabla.setModel(model);
+        tabla.setRowHeight(20);
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(100);
+        for (int i = 1; i < tabla.getColumnCount(); i++) {
+            tabla.getColumnModel().getColumn(i).setPreferredWidth(30);
+        }
+    }
+    
+    public void GanttSimpleNonPreemptive(HashMap<String, ArrayList<Integer>> mapaOrdenado) {
+        // Calcular tiempo total considerando llegadas y ráfagas
+        int tiempoActual = 0;
+        int totalTiempo = 0;
+        for (Map.Entry<String, ArrayList<Integer>> entry : mapaOrdenado.entrySet()) {
+            int llegada = entry.getValue().get(0);
+            int rafaga = entry.getValue().get(1);
+            tiempoActual = Math.max(tiempoActual, llegada) + rafaga;
+        }
+        totalTiempo = tiempoActual;
+
+        // Crear encabezados de columnas
+        String[] columnas = new String[totalTiempo + 1];
+        columnas[0] = "Proceso";
+        for (int i = 1; i <= totalTiempo; i++) {
+            columnas[i] = String.valueOf(i - 1);
+        }
+
+        // Limpiar y configurar modelo
+        DefaultTableModel model = this.view.getModelDiagram();
+        model.setRowCount(0);
+        model.setColumnCount(0);
+        for (String col : columnas) {
+            model.addColumn(col);
+        }
+
+        // Dibujar cada proceso
+        tiempoActual = 0;
+        for (Map.Entry<String, ArrayList<Integer>> entry : mapaOrdenado.entrySet()) {
+            String nombre = entry.getKey();
+            int llegada = entry.getValue().get(0);
+            int rafaga = entry.getValue().get(1);
+
+            // El proceso empieza cuando llega o cuando termina el anterior
+            int inicio = Math.max(tiempoActual, llegada);
+
+            Object[] fila = new Object[totalTiempo + 1];
+            fila[0] = nombre;
+
+            for (int t = inicio; t < inicio + rafaga; t++) {
+                fila[t + 1] = "██";
+            }
+
+            model.addRow(fila);
+            tiempoActual = inicio + rafaga;
+        }
+
+        // Configurar JTable
+        JTable tabla = this.view.jTable26;
+        tabla.setModel(model);
+        tabla.setRowHeight(20);
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(100);
+        for (int i = 1; i < tabla.getColumnCount(); i++) {
+            tabla.getColumnModel().getColumn(i).setPreferredWidth(30);
+        }
+    }
+
 }

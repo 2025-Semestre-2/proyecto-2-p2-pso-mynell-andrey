@@ -584,8 +584,8 @@ public class View extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel13)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         getContentPane().add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(903, 6, 210, -1));
@@ -829,6 +829,11 @@ public class View extends javax.swing.JFrame {
     public DefaultTableModel getModelPila(){
         return (DefaultTableModel) jTable7.getModel();
     }
+    
+    public DefaultTableModel getModelDiagram(){
+        return (DefaultTableModel) jTable26.getModel();
+    }
+    
     public DefaultTableModel getModelArchivos(){
         return (DefaultTableModel) jTable6.getModel();
     }
@@ -994,7 +999,7 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
     private javax.swing.JTable jTable25;
-    private javax.swing.JTable jTable26;
+    public javax.swing.JTable jTable26;
     public javax.swing.JTable jTable3;
     private javax.swing.JTable jTable4;
     private javax.swing.JTable jTable5;

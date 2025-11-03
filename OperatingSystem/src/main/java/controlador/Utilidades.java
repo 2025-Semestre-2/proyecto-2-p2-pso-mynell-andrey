@@ -310,16 +310,34 @@ public class Utilidades {
             return mapaOrdenado; 
         }
         
-        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosHRRN(HashMap<String, ArrayList<Integer>> mapa) {
-            List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet());
-            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
+        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosHRRN(
+            HashMap<String, ArrayList<Integer>> mapa) {
 
+            class Proceso {
+                String nombre;
+                int llegada;
+                int rafaga;
+
+                Proceso(String nombre, int llegada, int rafaga) {
+                    this.nombre = nombre;
+                    this.llegada = llegada;
+                    this.rafaga = rafaga;
+                }
+            }
+
+            List<Proceso> procesos = new ArrayList<>();
+            for (Map.Entry<String, ArrayList<Integer>> entry : mapa.entrySet()) {
+                procesos.add(new Proceso(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1)));
+            }
+
+            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
             int tiempo = 0;
+
             while (!procesos.isEmpty()) {
-                // Procesos que ya llegaron
-                List<Map.Entry<String, ArrayList<Integer>>> disponibles = new ArrayList<>();
-                for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
-                    if (p.getValue().get(0) <= tiempo) { // tiempo de llegada <= tiempo actual
+                // Obtener procesos que ya han llegado
+                List<Proceso> disponibles = new ArrayList<>();
+                for (Proceso p : procesos) {
+                    if (p.llegada <= tiempo) {
                         disponibles.add(p);
                     }
                 }
@@ -328,83 +346,90 @@ public class Utilidades {
                     tiempo++;
                     continue;
                 }
+                final int t = tiempo;
+                // Calcular Response Ratio y elegir el mayor
+                Proceso siguiente = Collections.max(disponibles, (p1, p2) -> {
+                    double rr1 = (double)(t - p1.llegada + p1.rafaga) / p1.rafaga;
+                    double rr2 = (double)(t - p2.llegada + p2.rafaga) / p2.rafaga;
+                    return Double.compare(rr1, rr2);
+                });
 
-                // Calcular RR (Response Ratio) = (Espera + Ráfaga) / Ráfaga
-                Map.Entry<String, ArrayList<Integer>> siguiente = disponibles.get(0);
-                double mayorRR = -1;
+                // Ejecutar completamente
+                mapaOrdenado.put(siguiente.nombre + "_" + tiempo, 
+                                 new ArrayList<>(List.of(siguiente.llegada, siguiente.rafaga)));
 
-                for (Map.Entry<String, ArrayList<Integer>> p : disponibles) {
-                    int llegada = p.getValue().get(0);
-                    int rafaga = p.getValue().get(1);
-                    int espera = tiempo - llegada;
-                    double rr = (double) (espera + rafaga) / rafaga;
-
-                    if (rr > mayorRR) {
-                        mayorRR = rr;
-                        siguiente = p;
-                    }
-                }
-
-                // Ejecutar proceso seleccionado
-                mapaOrdenado.put(siguiente.getKey(), siguiente.getValue());
-                tiempo += siguiente.getValue().get(1); // avanzar el tiempo
+                tiempo += siguiente.rafaga;
                 procesos.remove(siguiente);
             }
 
             return mapaOrdenado;
         }
-        
-        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosCFS(HashMap<String, ArrayList<Integer>> mapa) {
-            List<Map.Entry<String, ArrayList<Integer>>> procesos = new ArrayList<>(mapa.entrySet());
-            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
 
-            HashMap<String, Double> vruntime = new HashMap<>();
-            for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
-                vruntime.put(p.getKey(), 0.0);
+        
+        public static LinkedHashMap<String, ArrayList<Integer>> ordenarProcesosCFS(
+            HashMap<String, ArrayList<Integer>> mapa) {
+
+            class Proceso {
+                String nombre;
+                int llegada;
+                int rafagaRestante;
+                double vruntime;
+
+                Proceso(String nombre, int llegada, int rafaga) {
+                    this.nombre = nombre;
+                    this.llegada = llegada;
+                    this.rafagaRestante = rafaga;
+                    this.vruntime = 0;
+                }
             }
+
+            List<Proceso> procesos = new ArrayList<>();
+            for (Map.Entry<String, ArrayList<Integer>> entry : mapa.entrySet()) {
+                procesos.add(new Proceso(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1)));
+            }
+
+            LinkedHashMap<String, ArrayList<Integer>> mapaOrdenado = new LinkedHashMap<>();
+            List<Proceso> activos = new ArrayList<>();
 
             int tiempo = 0;
-            double quantum = 1.0;
 
-            HashMap<String, Integer> tiempoRestante = new HashMap<>();
-            for (Map.Entry<String, ArrayList<Integer>> p : procesos) {
-                tiempoRestante.put(p.getKey(), p.getValue().get(1));
-            }
-
-            while (!tiempoRestante.isEmpty()) {
-                List<String> disponibles = new ArrayList<>();
-                for (String nombre : tiempoRestante.keySet()) {
-                    int llegada = mapa.get(nombre).get(0);
-                    if (llegada <= tiempo) {
-                        disponibles.add(nombre);
+            while (!procesos.isEmpty() || !activos.isEmpty()) {
+                // Mover procesos que ya llegaron a la lista de activos
+                Iterator<Proceso> it = procesos.iterator();
+                while (it.hasNext()) {
+                    Proceso p = it.next();
+                    if (p.llegada <= tiempo) {
+                        activos.add(p);
+                        it.remove();
                     }
                 }
 
-                if (disponibles.isEmpty()) {
+                if (activos.isEmpty()) {
                     tiempo++;
                     continue;
                 }
-                String siguiente = disponibles.get(0);
-                for (String p : disponibles) {
-                    if (vruntime.get(p) < vruntime.get(siguiente)) {
-                        siguiente = p;
-                    }
-                }
 
-                int restante = tiempoRestante.get(siguiente);
-                int ejecutar = (int) Math.min(quantum, restante);
-                tiempo += ejecutar;
+                // Seleccionar el proceso con menor vruntime (más justo)
+                activos.sort(Comparator.comparingDouble(p -> p.vruntime));
+                Proceso actual = activos.get(0);
 
-                tiempoRestante.put(siguiente, restante - ejecutar);
-                vruntime.put(siguiente, vruntime.get(siguiente) + ejecutar);
+                // Ejecutar 1 unidad de tiempo
+                int ejecucion = 1;
+                mapaOrdenado.put(actual.nombre + "_" + tiempo, new ArrayList<>(List.of(actual.llegada, ejecucion)));
 
-                if (tiempoRestante.get(siguiente) == 0) {
-                    mapaOrdenado.put(siguiente, mapa.get(siguiente));
-                    tiempoRestante.remove(siguiente);
+                tiempo += ejecucion;
+                actual.rafagaRestante -= ejecucion;
+                actual.vruntime += ejecucion; // En versión simplificada, igual a tiempo real
+
+                // Si terminó, quitarlo de activos
+                if (actual.rafagaRestante <= 0) {
+                    activos.remove(actual);
                 }
             }
+
             return mapaOrdenado;
         }
+
 
         
         private static final String REGISTRO = "(AX|BX|CX|DX)";
