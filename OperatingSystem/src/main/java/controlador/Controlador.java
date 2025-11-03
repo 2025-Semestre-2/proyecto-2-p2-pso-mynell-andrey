@@ -3,6 +3,7 @@ package controlador;
 import static controlador.Utilidades.*;
 import java.awt.HeadlessException;
 import modelo.SistemaOperativo;
+import static modelo.Memoria.obtenerKeyIndice;
 
 import vista.View;
 
@@ -253,7 +254,7 @@ public class Controlador {
                 finalizarProceso(proceso,indice,nrafaga);
                 next++;
                 eliminarProcesoU(mapa,nombreproceso);
-               // librarGuardado(obtenerKeyIndice(indice));
+                librarGuardado(indice);
                 
             }
         }).start(); 
@@ -275,8 +276,13 @@ public class Controlador {
               
             
             case "Dinámica": 
-
-                return -1;
+                Particion bloque = pc.getMemoria().asignarBloqueDinamico();
+                if(bloque==null){
+                    JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
+                    return -1;
+                }
+     
+                return bloque.getBase();
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               return -1;
@@ -284,16 +290,16 @@ public class Controlador {
         }
         
     }
-        public void librarGuardado(int id){
+    public void librarGuardado(int id){
         String tipo = view.getCBoxMemoria().toString();
               
         switch(tipo){
             case "Fija": 
-                pc.getMemoria().liberarParticion(id);
+                pc.getMemoria().liberarParticion(obtenerKeyIndice(id));
                 break;
             
             case "Dinámica": 
-
+                pc.getMemoria().liberarBloqueDinamico(id);
                 break;
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
