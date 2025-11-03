@@ -160,6 +160,52 @@ public class Memoria {
 
         return null;
     }
+    private List<Particion> marcos = new ArrayList<>();
+    private static final int TAM_PAGINA = 16;
+
+    public void inicializarPaginacion(int tamMemoria) {
+        marcos.clear();
+        int cantidadMarcos = tamMemoria / TAM_PAGINA;
+        int base = 0;
+        for (int i = 0; i < cantidadMarcos; i++) {
+            marcos.add(new Particion(base, TAM_PAGINA, false));
+            base += TAM_PAGINA;
+        }
+        ultimaParticionAsignada = 0;
+        System.out.println("Memoria inicializada con " + cantidadMarcos + " marcos de tamaño " + TAM_PAGINA);
+    }
+    
+    public Particion asignarPagina() {
+        int n = marcos.size();
+        if (n == 0) {
+            System.out.println("No hay marcos inicializados.");
+            return null;
+        }
+
+        for (int i = ultimaParticionAsignada; i < n; i++) {
+            Particion marco = marcos.get(i);
+            if (!marco.isOcupado()) {
+                marco.setOcupado(true);
+                ultimaParticionAsignada = (i + 1) % n;
+                System.out.println("Página asignada en marco base " + marco.getBase());
+                return marco;
+            }
+        }
+
+        for (int i = 0; i < ultimaParticionAsignada; i++) {
+            Particion marco = marcos.get(i);
+            if (!marco.isOcupado()) {
+                marco.setOcupado(true);
+                ultimaParticionAsignada = (i + 1) % n;
+                System.out.println("Página asignada en marco base " + marco.getBase());
+                return marco;
+            }
+        }
+
+        System.out.println("⚠️ No hay marcos disponibles (memoria llena)");
+        return null;
+    }
+    
     public Memoria(int size){
         memoria = new String[size];
     }

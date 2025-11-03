@@ -422,6 +422,7 @@ public class SistemaOperativo {
         } 
         crearParticiones();
         memoria.inicializarBloqueDinamico(memoria.size());
+        memoria.inicializarPaginacion(memoria.size());
         System.out.println(particionesFija);
         System.out.println("d i "+ memoria.bloquesDinamicos);
     }
