@@ -284,6 +284,14 @@ public class Controlador {
                 }
      
                 return bloque.getBase();
+            case "Segmentación": 
+                Particion segmento = pc.getMemoria().asignarSegemento();
+                if(segmento==null){
+                    JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
+                    return -1;
+                }
+     
+                return segmento.getBase();
             default:
               JOptionPane.showMessageDialog(null, "El algoritmo "+tipo+ " aún no implementado");
               return -1;
@@ -300,6 +308,9 @@ public class Controlador {
                 break;
             
             case "Dinámica": 
+                pc.getMemoria().liberarBloqueDinamico(id);
+                break;
+            case "Segmentación": 
                 pc.getMemoria().liberarBloqueDinamico(id);
                 break;
             default:

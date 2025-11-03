@@ -114,6 +114,52 @@ public class Memoria {
             }
         }
     }
+    /*
+    =========================================
+    SEGMENTACION
+    =========================================
+    */
+    public void inicializarAsegmento(int tam){
+        if (bloquesDinamicos.isEmpty()) {
+            int inicio = Math.max(20, tam/5);
+            bloquesDinamicos.add(new Particion(inicio,16,false));
+            ultimaParticionAsignada = 0;
+        }
+        
+    }
+    public  Particion asignarSegemento() {
+        int n = bloquesDinamicos.size();
+        if (n == 0) return null;
+        boolean encontrado = false;
+    
+        for (int i = ultimaParticionAsignada; i < n; i++) {
+       
+        
+            Particion p = bloquesDinamicos.get(i);
+            System.out.println(p);
+
+            if (!p.isOcupado() && p.getTamaño() >= 16) {
+                int base = p.getBase();
+                p.setOcupado(true);
+                encontrado = true;
+                int nuevaBase = base + 16;
+
+                Particion nuevo = new Particion(nuevaBase, 16, false);
+                bloquesDinamicos.add(nuevo);
+
+                ultimaParticionAsignada++;
+                return p;
+               
+            }
+        }
+  
+        if (!encontrado) {
+            ultimaParticionAsignada = 0;
+            return asignarBloqueDinamico();
+        }
+
+        return null;
+    }
     public Memoria(int size){
         memoria = new String[size];
     }
