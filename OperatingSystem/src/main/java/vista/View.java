@@ -40,12 +40,6 @@ public class View extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane5 = new javax.swing.JScrollPane();
-        jTable4 = new javax.swing.JTable();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        jTable5 = new javax.swing.JTable();
-        jScrollPane26 = new javax.swing.JScrollPane();
-        jTable25 = new javax.swing.JTable();
         jPanel4 = new javax.swing.JPanel();
         btnEjecutar = new javax.swing.JButton();
         btnPaso = new javax.swing.JButton();
@@ -148,46 +142,12 @@ public class View extends javax.swing.JFrame {
         lbPrioridad1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
 
-        jTable4.setFont(new java.awt.Font("Arial Black", 1, 14)); // NOI18N
-        jTable4.setForeground(new java.awt.Color(0, 153, 51));
-        jTable4.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Informacion del estado de E/S"
-            }
-        ));
-        jScrollPane5.setViewportView(jTable4);
-
-        jTable5.setFont(new java.awt.Font("Arial Black", 1, 14)); // NOI18N
-        jTable5.setForeground(new java.awt.Color(0, 153, 51));
-        jTable5.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Informacion del estado de E/S"
-            }
-        ));
-        jScrollPane6.setViewportView(jTable5);
-
-        jTable25.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane26.setViewportView(jTable25);
-
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Mini PC");
         setBackground(new java.awt.Color(153, 0, 153));
+        setMaximumSize(new java.awt.Dimension(1120, 650));
+        setMinimumSize(new java.awt.Dimension(1113, 600));
+        setPreferredSize(new java.awt.Dimension(1120, 650));
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -323,7 +283,7 @@ public class View extends javax.swing.JFrame {
         getContentPane().add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 470, 190, -1));
 
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
-        getContentPane().add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(473, 0, -1, 471));
+        getContentPane().add(jSeparator1, new org.netbeans.lib.awtextra.AbsoluteConstraints(473, 0, -1, 630));
 
         jLabel12.setFont(new java.awt.Font("Arial Black", 1, 24)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(0, 153, 51));
@@ -491,13 +451,13 @@ public class View extends javax.swing.JFrame {
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
                 .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
-        getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(688, 4, -1, 230));
+        getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 10, -1, 224));
 
         jTable6.setFont(new java.awt.Font("Arial Black", 1, 14)); // NOI18N
         jTable6.setForeground(new java.awt.Color(0, 153, 51));
@@ -550,7 +510,7 @@ public class View extends javax.swing.JFrame {
         ));
         jScrollPane27.setViewportView(jTable26);
 
-        getContentPane().add(jScrollPane27, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 510, 620, 100));
+        getContentPane().add(jScrollPane27, new org.netbeans.lib.awtextra.AbsoluteConstraints(482, 510, 625, 100));
 
         jLabel20.setFont(new java.awt.Font("Arial Black", 1, 24)); // NOI18N
         jLabel20.setForeground(new java.awt.Color(0, 153, 51));
@@ -1335,12 +1295,9 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane26;
     private javax.swing.JScrollPane jScrollPane27;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JScrollPane jScrollPane9;
@@ -1349,11 +1306,8 @@ public class View extends javax.swing.JFrame {
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
-    private javax.swing.JTable jTable25;
     public javax.swing.JTable jTable26;
     public javax.swing.JTable jTable3;
-    private javax.swing.JTable jTable4;
-    private javax.swing.JTable jTable5;
     private javax.swing.JTable jTable6;
     private javax.swing.JTable jTable7;
     public javax.swing.JTable jTable8;
