@@ -406,7 +406,7 @@ public class SistemaOperativo {
                 int base = Integer.parseInt(partes[1]);
                 int alcance = Integer.parseInt(partes[2]);
                 String estado ;
-                if(i<3){estado="nuevo";}//<5
+                if(i<5){estado="nuevo";}//<5
                 else {estado = "nuevo";cpu=1;}
                 archAcc.add(nombreArchivo);
                 BCP bcp = new BCP(contProceso,estado,i+1,base,alcance);
@@ -425,8 +425,6 @@ public class SistemaOperativo {
         crearParticiones();
         memoria.inicializarBloqueDinamico(memoria.size());
         memoria.inicializarPaginacion(memoria.size());
-        System.out.println(particionesFija);
-        System.out.println("d i "+ memoria.bloquesDinamicos);
     }
     public void crearParticiones(){
         particionesFija.clear();

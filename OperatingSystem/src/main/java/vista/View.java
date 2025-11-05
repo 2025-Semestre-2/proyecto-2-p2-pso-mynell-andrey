@@ -9,7 +9,10 @@ import controlador.Utilidades;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
+
 import javax.swing.JSpinner;
+import javax.swing.JTable;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
@@ -877,6 +880,18 @@ public class View extends javax.swing.JFrame {
         }
         
     }
+    public void updateFilaEstados(String colum1, String colum2) { 
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object valorCol1 = model.getValueAt(i, 0); 
+
+            if (valorCol1.equals(colum1)) {
+                model.setValueAt(colum2, i, 1); 
+                break; 
+            }
+        }
+    }
     public void addFilaEstados(String colum1, String colum2){
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.addRow(new Object[]{colum1,colum2});
@@ -899,6 +914,69 @@ public class View extends javax.swing.JFrame {
         else{
             model.setValueAt(colum1, fila, 0);
         }
+    }
+
+    //diagrama
+    public void addFilaProcesoD(String nombreProceso) {
+        DefaultTableModel model = (DefaultTableModel) jTable26.getModel();
+
+        Object[] fila = new Object[model.getColumnCount()];
+        fila[0] = nombreProceso; 
+
+        model.addRow(fila);
+    }
+    public void agregarColumnasHasta(int numero) {
+        DefaultTableModel model = (DefaultTableModel) jTable26.getModel();
+        int columnasActuales = model.getColumnCount();
+
+        if (numero <= 5) return;
+
+        int maxActual = 0;
+        for (int i = 0; i < columnasActuales; i++) {
+            try {
+                int num = Integer.parseInt(model.getColumnName(i));
+                if (num > maxActual) maxActual = num;
+            } catch (NumberFormatException ignored) {}
+        }
+
+
+        if (maxActual >= numero) return;
+
+        Vector<Vector> data = model.getDataVector();
+        Vector<String> columnas = new Vector<>();
+
+        columnas.add("Proceso");
+        for (int i = 0; i <= numero; i++) {
+            columnas.add(String.valueOf(i));
+        }
+
+        DefaultTableModel nuevoModel = new DefaultTableModel(columnas, 0);
+
+        for (Vector<Object> fila : data) {
+            Vector<Object> nuevaFila = new Vector<>(columnas.size());
+            for (int i = 0; i < columnas.size(); i++) {
+                if (i < fila.size()) nuevaFila.add(fila.get(i));
+                else nuevaFila.add(null);
+            }
+            nuevoModel.addRow(nuevaFila);
+        }
+
+        jTable26.setModel(nuevoModel);
+        jTable26.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    }
+    public void marcarEjecucion(String proceso, int tiempo) {
+        DefaultTableModel model = (DefaultTableModel) jTable26.getModel();
+
+        int filaEncontrada = -1;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Object valor = model.getValueAt(i, 0);
+            if (valor.toString().equalsIgnoreCase(proceso)) {
+                filaEncontrada = i;
+                break;
+            }
+        }
+        model.setValueAt("██", filaEncontrada, tiempo+1);
+        jTable26.repaint();
     }
     
     public void cleanPila(){
