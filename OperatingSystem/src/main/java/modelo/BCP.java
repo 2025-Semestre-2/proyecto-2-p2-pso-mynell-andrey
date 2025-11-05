@@ -29,6 +29,8 @@ public class BCP {
     private List<String> archivos;//lista de archivos que el proceso tiene abiertos
     
     private String cpuAsig;
+    
+    private int cpu;
 
    
     //estaditicas
@@ -36,7 +38,7 @@ public class BCP {
     private long tiempoFin;
     private long tiempoTotal;
 
-    public BCP(int idProceso, String estado, int prioridad, int base, int alcance) {
+    public BCP(int idProceso, String estado, int prioridad, int base, int alcance, int cpu) {
         this.idProceso = idProceso;
         this.estado = estado;
         this.prioridad = prioridad;
@@ -47,6 +49,7 @@ public class BCP {
         this.archivos = new ArrayList<>();
         this.tiempoInicio = System.currentTimeMillis();
         this.tiempoTotal = 0;
+        this.cpu = cpu;
         
         inicializarRegistros();
     }
@@ -60,6 +63,7 @@ public class BCP {
         this.archivos = new ArrayList<>();
         this.tiempoInicio = System.currentTimeMillis();
         this.tiempoTotal = 0;
+        this.cpu = 0;
     }
     //mas getter y setter
     private void inicializarRegistros() {
@@ -174,6 +178,10 @@ public class BCP {
     public long getTiempoTotal() {
         return tiempoTotal;
     }
+    
+    public int getCPU() {
+        return cpu;
+    }
 
     public void setIdProceso(int idProceso) {
         this.idProceso = idProceso;
@@ -252,6 +260,11 @@ public class BCP {
     public void setTiempoTotal(long tiempoTotal) {
         this.tiempoTotal = tiempoTotal;
     }
+    
+    public void setCPU(int cpu) {
+        this.cpu = cpu;
+    }
+    
     @Override
     public String toString() {
         return "BCP{" +

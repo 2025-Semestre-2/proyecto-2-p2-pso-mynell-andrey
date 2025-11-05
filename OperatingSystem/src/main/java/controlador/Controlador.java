@@ -33,9 +33,6 @@ public class Controlador {
     private final Object lock = new Object();
     private boolean modoPasoPaso = false;
     private boolean hiloIniciado = false;
-    private int cpuCounter = 0;
-
-
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
         this.pc = pc;
@@ -229,14 +226,14 @@ public class Controlador {
                 while (i < proceso.getBase() + rafaga) {
                     String instr = pc.getDisco().getDisco(i);
                     if (instr != null) {
-                        pc.getCPU(cpuCounter%2).setIR(instr);
+                        pc.getCPU(proceso.getCPU()).setIR(instr);
                         this.view.jTable3.changeSelection(i, i, false, false);
-                        String res = pc.interprete(instr, proceso,pc.getCPU(cpuCounter%2));
+                        String res = pc.interprete(instr, proceso,pc.getCPU(proceso.getCPU()));
                         i = proceso.getPc();
                         view.marcarEjecucion("P"+proceso.getIdProceso(), contEjecucion);
                         contEjecucion++;
                         //entrada usuario
-                        stop = procesarResultado(res);
+                        stop = procesarResultado(res,proceso.getCPU());
                         if (stop) break;
                     
                         if (modoPasoPaso) {
@@ -261,7 +258,6 @@ public class Controlador {
                 next++;
                 eliminarProcesoU(mapa,nombreproceso);
                 librarGuardado(indice);
-                cpuCounter++;
             }
         }).start(); 
     }
@@ -368,14 +364,14 @@ public class Controlador {
             Thread.currentThread().interrupt();
         }
     }
-    public boolean procesarResultado(String res){
+    public boolean procesarResultado(String res,int CPU){
         switch(res){
             case "": return false;
             case "~Exit":
                 return true;
                 
             case "~Input": 
-                manejarEntradaUsuario();
+                manejarEntradaUsuario(CPU);
                 return false;
 
             default:
@@ -383,7 +379,7 @@ public class Controlador {
                 return false;
         }
     }
-    public void manejarEntradaUsuario(){
+    public void manejarEntradaUsuario(int CPU){
         this.view.jTextField1.selectAll();
         CountDownLatch latch = new CountDownLatch(1);
         final String[] dato = new String[1];
@@ -395,14 +391,14 @@ public class Controlador {
         {
             try {
                 latch.await();
-                this.pc.movRegistro("DX", Integer.parseInt(dato[0]),pc.getCPU(cpuCounter%2));
+                this.pc.movRegistro("DX", Integer.parseInt(dato[0]),pc.getCPU(CPU));
             } catch (InterruptedException ex) {
                 System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
         }
     }
     public void actualizarUI(BCP proceso,int indice,int id){
-        pc.actualizarBCPDesdeCPU(proceso.getIdProceso(),proceso,pc.getCPU(cpuCounter%2));
+        pc.actualizarBCPDesdeCPU(proceso.getIdProceso(),proceso,pc.getCPU(proceso.getCPU()));
         pc.guardarBCPMemoria(proceso, indice);
         updateMemoria(proceso, indice);
         actualizarBCP(proceso,id);
@@ -434,7 +430,8 @@ public class Controlador {
                BCP proceso = pc.getPlanificador().obtenerProcesoIndice(i);
                String v1 = proceso.getEstado();
                String v2 = "P"+proceso.getIdProceso();
-               view.addFilaEstados(v2, v1);  
+               String v3 = Integer.toString(proceso.getCPU());
+               view.addFilaEstados(v2, v1, v3);  
               
         }
     }
@@ -486,8 +483,8 @@ public class Controlador {
         }
     }
  
-    public void updateMemoria(String instr){ 
-        int star = pc.getCPU(cpuCounter%2).getPC();
+    public void updateMemoria(String instr, int CPU){ 
+        int star = pc.getCPU(CPU).getPC();
         view.addFilaMemoria(Integer.toString(star), instr);
         
     }
@@ -515,19 +512,20 @@ public class Controlador {
 
     public void actualizarBCP(BCP bcp,int id){
 
-        view.setlbIBX(Integer.toString(bcp.getRegistro(id,"BX")));
-        view.setlbIR(pc.binario(bcp.getIr()));
-        view.setlblAC(Integer.toString(bcp.getRegistro(id,"AC")));
-        view.setlblAX(Integer.toString(bcp.getRegistro(id,"AX")));
-        view.setlblCX(Integer.toString(bcp.getRegistro(id,"CX")));
-        view.setlblDX(Integer.toString(bcp.getRegistro(id,"DX")));
-        view.setlblPC(Integer.toString(bcp.getPc())); 
         
-        view.setlbEnlace(bcp.getSiguiente());
-        view.setlbCPU(bcp.getCpuAsig());
-        view.setlbBase(Integer.toString(bcp.getBase()));
-        view.setlbAlcance(Integer.toString(bcp.getAlcance()));
-        view.setlblPrioridad(Integer.toString(bcp.getPrioridad()));
+        view.setlbIBX(Integer.toString(bcp.getRegistro(id,"BX")), bcp.getCPU());
+        view.setlbIR(pc.binario(bcp.getIr()), bcp.getCPU());
+        view.setlblAC(Integer.toString(bcp.getRegistro(id,"AC")), bcp.getCPU());
+        view.setlblAX(Integer.toString(bcp.getRegistro(id,"AX")), bcp.getCPU());
+        view.setlblCX(Integer.toString(bcp.getRegistro(id,"CX")), bcp.getCPU());
+        view.setlblDX(Integer.toString(bcp.getRegistro(id,"DX")), bcp.getCPU());
+        view.setlblPC(Integer.toString(bcp.getPc()), bcp.getCPU()); 
+        
+        view.setlbEnlace(bcp.getSiguiente(), bcp.getCPU());
+        view.setlbCPU(bcp.getCpuAsig(), bcp.getCPU());
+        view.setlbBase(Integer.toString(bcp.getBase()), bcp.getCPU());
+        view.setlbAlcance(Integer.toString(bcp.getAlcance()), bcp.getCPU());
+        view.setlblPrioridad(Integer.toString(bcp.getPrioridad()), bcp.getCPU());
     }
  
     public void buscarArchivo(){
@@ -603,19 +601,33 @@ public class Controlador {
         view.getModelMemory().setRowCount(0);
         view.getModelPila().setRowCount(0);
         view.getModelArchivos().setRowCount(0);
-        view.setlbIBX("---");
-        view.setlbIR("---");
-        view.setlblAC("---");
-        view.setlblAX("---");
-        view.setlblCX("---");
-        view.setlblDX("---");
-        view.setlblPC("---");
+        view.setlbIBX("---",0);
+        view.setlbIR("---",0);
+        view.setlblAC("---",0);
+        view.setlblAX("---",0);
+        view.setlblCX("---",0);
+        view.setlblDX("---",0);
+        view.setlblPC("---",0);
         
-        view.setlbEnlace("---");
-        view.setlbCPU("---");
-        view.setlbBase("---");
-        view.setlbAlcance("---");
-        view.setlblPrioridad("---");
+        view.setlbEnlace("---",0);
+        view.setlbCPU("---",0);
+        view.setlbBase("---",0);
+        view.setlbAlcance("---",0);
+        view.setlblPrioridad("---",0);
+        
+        view.setlbIBX("---",1);
+        view.setlbIR("---",1);
+        view.setlblAC("---",1);
+        view.setlblAX("---",1);
+        view.setlblCX("---",1);
+        view.setlblDX("---",1);
+        view.setlblPC("---",1);
+        
+        view.setlbEnlace("---",1);
+        view.setlbCPU("---",1);
+        view.setlbBase("---",1);
+        view.setlbAlcance("---",1);
+        view.setlblPrioridad("---",1);
         
         pc = new SistemaOperativo();
         estadistica = new Estadistica();

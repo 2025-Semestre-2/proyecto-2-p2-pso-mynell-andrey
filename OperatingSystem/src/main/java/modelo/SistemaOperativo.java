@@ -18,6 +18,7 @@ public class SistemaOperativo {
     private Memoria memoria;
     private Planificador plan;
     private List<String> instrucciones;
+    private int cpuCounter = 0;
   
     private boolean cmpBandera = false;
     private Stack<Integer> pila = new Stack<>();
@@ -409,7 +410,7 @@ public class SistemaOperativo {
                 if(i<5){estado="nuevo";}//<5
                 else {estado = "nuevo";cpu=1;}
                 archAcc.add(nombreArchivo);
-                BCP bcp = new BCP(contProceso,estado,i+1,base,alcance);
+                BCP bcp = new BCP(contProceso,estado,i+1,base,alcance,cpuCounter++%2);
                 bcp.setCpuAsig("Hilo "+cpu);
            
                 bcp.getArchivos().addAll(archAcc);
