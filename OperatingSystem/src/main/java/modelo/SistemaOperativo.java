@@ -13,7 +13,7 @@ import controlador.Particion;
 
 public class SistemaOperativo {
     private BCP bcp;
-    private CPU cpu;
+    private List<CPU> cpu;
     private Disco disco;
     private Memoria memoria;
     private Planificador plan;
@@ -24,8 +24,10 @@ public class SistemaOperativo {
     
   
     public SistemaOperativo(){
+        cpu = new ArrayList<>();
         bcp = new BCP();
-        cpu = new CPU();
+        cpu.add(new CPU());
+        cpu.add(new CPU());
         instrucciones = new ArrayList<>();
 
         plan = new Planificador();
@@ -67,14 +69,16 @@ public class SistemaOperativo {
     }   
 
     public void inicializarSO(int tamanno){
-        cpu.reset();
-        cpu.setPC(0);
+        cpu.get(0).reset();
+        cpu.get(1).reset();
+        cpu.get(0).setPC(0);
+        cpu.get(1).setPC(0);
         int base = getEspacioSO(tamanno);
         bcp.setPc(base);
     }
 
-    public void cargarSO(String instr){
-        int pos = cpu.getPC();
+    public void cargarSO(String instr, CPU temp){
+        int pos = temp.getPC();
         try {
             if(pos <= disco.size()){
                 disco.setDisco(pos,instr);
@@ -87,38 +91,38 @@ public class SistemaOperativo {
         }
     }
     
-    public void movRegistro(String registro,int valor){
+    public void movRegistro(String registro,int valor, CPU temp){
         switch(registro.replace(",", "").toLowerCase()){
-            case "ax":cpu.setAX(valor);break;
-            case "bx":cpu.setBX(valor);break;
-            case "cx":cpu.setCX(valor);break;
-            case "dx":cpu.setDX(valor);break;
+            case "ax":temp.setAX(valor);break;
+            case "bx":temp.setBX(valor);break;
+            case "cx":temp.setCX(valor);break;
+            case "dx":temp.setDX(valor);break;
             
         }
     }
 
-    public int getRegistro(String registro){
+    public int getRegistro(String registro, CPU temp){
         switch(registro.replace(",", "").toLowerCase()){
-            case "ax": return cpu.getAX();
-            case "bx": return cpu.getBX();
-            case "cx": return cpu.getCX();
-            case "dx": return cpu.getDX();
+            case "ax": return temp.getAX();
+            case "bx": return temp.getBX();
+            case "cx": return temp.getCX();
+            case "dx": return temp.getDX();
             
         }
         return 0;
     }
 
-    public String interprete(String instr, BCP proceso){
+    public String interprete(String instr, BCP proceso, CPU temp){
         String[] partes = instr.split(" ");
         String op = partes[0].toLowerCase();
         int newpc = proceso.getPc()+ 1;
         switch(op){
             case "load":
-                cpu.setAC(getRegistro(partes[1]));
+                temp.setAC(getRegistro(partes[1], temp));
                 proceso.setPc(newpc);
                 break;
             case "store":
-                movRegistro(partes[1],cpu.getAC());
+                movRegistro(partes[1],temp.getAC(),temp);
                 proceso.setPc(newpc);
                 break;
             case "mov":
@@ -127,51 +131,51 @@ public class SistemaOperativo {
                     case "bx":
                     case "cx":
                     case "dx":
-                        movRegistro(partes[1],getRegistro(partes[2]));
+                        movRegistro(partes[1],getRegistro(partes[2],temp),temp);
                         break;
                     default:
-                        movRegistro(partes[1],Integer.parseInt(partes[2]));
+                        movRegistro(partes[1],Integer.parseInt(partes[2]),temp);
                 }
                 proceso.setPc(newpc);
                 break;
             case "sub":
-                cpu.setAC(cpu.getAC()-getRegistro(partes[1]));
+                temp.setAC(temp.getAC()-getRegistro(partes[1],temp));
                 proceso.setPc(newpc);
                 break;
             case "add":
-                cpu.setAC(cpu.getAC()+getRegistro(partes[1]));
+                temp.setAC(temp.getAC()+getRegistro(partes[1],temp));
                 proceso.setPc(newpc);
                 break;
             case "inc":
                 if(partes.length == 1){
-                    cpu.setAC(cpu.getAC()+1);
+                    temp.setAC(temp.getAC()+1);
                 }else{
                     switch(partes[1].toLowerCase()){
-                    case "ax": cpu.setAX(cpu.getAX()+1); break;
-                    case "bx": cpu.setBX(cpu.getBX()+1); break; 
-                    case "cx": cpu.setCX(cpu.getCX()+1); break;
-                    case "dx": cpu.setDX(cpu.getDX()+1);break; 
+                    case "ax": temp.setAX(temp.getAX()+1); break;
+                    case "bx": temp.setBX(temp.getBX()+1); break; 
+                    case "cx": temp.setCX(temp.getCX()+1); break;
+                    case "dx": temp.setDX(temp.getDX()+1); break; 
                     }
                 }
                 proceso.setPc(newpc);
                 break;
             case "dec":
                 if(partes.length == 1){
-                    cpu.setAC(cpu.getAC()-1);
+                    temp.setAC(temp.getAC()-1);
                 }else{
                     switch(partes[1].toLowerCase()){
-                    case "ax": cpu.setAX(cpu.getAX()-1); break;
-                    case "bx": cpu.setBX(cpu.getBX()-1); break; 
-                    case "cx": cpu.setCX(cpu.getCX()-1); break;
-                    case "dx": cpu.setDX(cpu.getDX()-1);break; 
+                    case "ax": temp.setAX(temp.getAX()-1); break;
+                    case "bx": temp.setBX(temp.getBX()-1); break; 
+                    case "cx": temp.setCX(temp.getCX()-1); break;
+                    case "dx": temp.setDX(temp.getDX()-1);break; 
                     }
                 }
                 proceso.setPc(newpc);
                 break;
             case "swap":
-                int temp = getRegistro(partes[1]);
-                movRegistro(partes[1],getRegistro(partes[2]));
-                movRegistro(partes[2], temp);
+                int a = getRegistro(partes[1],temp);
+                movRegistro(partes[1],getRegistro(partes[2],temp),temp);
+                movRegistro(partes[2], a, temp);
                 proceso.setPc(newpc);
                 break;
             case "int":
@@ -179,7 +183,7 @@ public class SistemaOperativo {
                     case "20h":
                         return "~Exit";
                     case "10h":
-                        return Integer.toString(cpu.getDX());
+                        return Integer.toString(temp.getDX());
                     case "09h":
                         return "~Input";
                     case "21h":
@@ -193,7 +197,7 @@ public class SistemaOperativo {
                 proceso.setPc(jmp);
                 break;
             case "cmp":
-                cmpBandera = getRegistro(partes[1]) == getRegistro(partes[2]);
+                cmpBandera = getRegistro(partes[1],temp) == getRegistro(partes[2],temp);
                 proceso.setPc(newpc);
                 break;
             case "je":
@@ -220,16 +224,16 @@ public class SistemaOperativo {
                 break;
             case "push":
                 Stack u = pila;
-                u.push((Integer)getRegistro(partes[1]));
+                u.push((Integer)getRegistro(partes[1],temp));
                 proceso.setPc(newpc);
                 break;
             case "pop":
                 int pop = pila.pop();
                 switch(partes[1].toLowerCase()){
-                case "ax": cpu.setAX(pop); break;
-                case "bx": cpu.setBX(pop); break; 
-                case "cx": cpu.setCX(pop); break;
-                case "dx": cpu.setDX(pop); break; 
+                case "ax": temp.setAX(pop); break;
+                case "bx": temp.setBX(pop); break; 
+                case "cx": temp.setCX(pop); break;
+                case "dx": temp.setDX(pop); break; 
                 }
                 proceso.setPc(newpc);
                 break;
@@ -374,20 +378,18 @@ public class SistemaOperativo {
         
     }
     //bcp
-    public void actualizarBCPDesdeCPU(int id,BCP bcp) {
-        bcp.setAc(cpu.getAC());
-        bcp.setAx(cpu.getAX());
-        bcp.setBx(cpu.getBX());
-        bcp.setCx(cpu.getCX());
-        bcp.setDx(cpu.getDX());
-        bcp.setIr(cpu.getIR());
-        bcp.setRegistro(id,"ac",cpu.getAC());
-        bcp.setRegistro(id,"ax",cpu.getAX());
-        bcp.setRegistro(id,"bx",cpu.getBX());
-        bcp.setRegistro(id,"cx",cpu.getCX());
-        bcp.setRegistro(id,"dx",cpu.getDX());
- 
-        
+    public void actualizarBCPDesdeCPU(int id,BCP bcp, CPU temp) {
+        bcp.setAc(temp.getAC());
+        bcp.setAx(temp.getAX());
+        bcp.setBx(temp.getBX());
+        bcp.setCx(temp.getCX());
+        bcp.setDx(temp.getDX());
+        bcp.setIr(temp.getIR());
+        bcp.setRegistro(id,"ac",temp.getAC());
+        bcp.setRegistro(id,"ax",temp.getAX());
+        bcp.setRegistro(id,"bx",temp.getBX());
+        bcp.setRegistro(id,"cx",temp.getCX());
+        bcp.setRegistro(id,"dx",temp.getDX());
     }
     
 
@@ -485,7 +487,7 @@ public class SistemaOperativo {
     }
     
     
-    public CPU getCPU() {return cpu;}
+    public CPU getCPU(int i) {return cpu.get(i);}
     public Disco getDisco() {return disco;}
     public Planificador getPlanificador() {return plan;}
     public BCP getBCP() {return bcp;}

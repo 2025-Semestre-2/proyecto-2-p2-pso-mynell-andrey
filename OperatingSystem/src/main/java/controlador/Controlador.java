@@ -32,6 +32,7 @@ public class Controlador {
     private final Object lock = new Object();
     private boolean modoPasoPaso = false;
     private boolean hiloIniciado = false;
+    private int cpuCounter = 0;
 
 
 
@@ -226,9 +227,9 @@ public class Controlador {
                 while (i < proceso.getBase() + rafaga) {
                     String instr = pc.getDisco().getDisco(i);
                     if (instr != null) {
-                        pc.getCPU().setIR(instr);
+                        pc.getCPU(cpuCounter%2).setIR(instr);
                         this.view.jTable3.changeSelection(i, i, false, false);
-                        String res = pc.interprete(instr, proceso);
+                        String res = pc.interprete(instr, proceso,pc.getCPU(cpuCounter%2));
                         i = proceso.getPc();
                         //entrada usuario
                         stop = procesarResultado(res);
@@ -256,7 +257,7 @@ public class Controlador {
                 next++;
                 eliminarProcesoU(mapa,nombreproceso);
                 librarGuardado(indice);
-                
+                cpuCounter++;
             }
         }).start(); 
     }
@@ -390,14 +391,14 @@ public class Controlador {
         {
             try {
                 latch.await();
-                this.pc.movRegistro("DX", Integer.parseInt(dato[0]));
+                this.pc.movRegistro("DX", Integer.parseInt(dato[0]),pc.getCPU(cpuCounter%2));
             } catch (InterruptedException ex) {
                 System.getLogger(Controlador.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
         }
     }
     public void actualizarUI(BCP proceso,int indice,int id){
-        pc.actualizarBCPDesdeCPU(proceso.getIdProceso(),proceso);
+        pc.actualizarBCPDesdeCPU(proceso.getIdProceso(),proceso,pc.getCPU(cpuCounter%2));
         pc.guardarBCPMemoria(proceso, indice);
         updateMemoria(proceso, indice);
         actualizarBCP(proceso,id);
@@ -454,7 +455,7 @@ public class Controlador {
     }
  
     public void updateMemoria(String instr){ 
-        int star = pc.getCPU().getPC();
+        int star = pc.getCPU(cpuCounter%2).getPC();
         view.addFilaMemoria(Integer.toString(star), instr);
         
     }
