@@ -447,7 +447,7 @@ public class Controlador {
     public void updateBCP(BCP proceso,int indice){
         pc.guardarBCPMemoria(proceso,indice);
         updateMemoria(proceso,indice);
-        updateEstados(Integer.toString(proceso.getIdProceso()),proceso.getEstado());
+        updateEstados("P"+proceso.getIdProceso(),proceso.getEstado());
             
     }
     public void tablaEjecucion(){
