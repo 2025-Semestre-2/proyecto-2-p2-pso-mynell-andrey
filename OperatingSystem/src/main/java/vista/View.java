@@ -145,9 +145,7 @@ public class View extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Mini PC");
         setBackground(new java.awt.Color(153, 0, 153));
-        setMaximumSize(new java.awt.Dimension(1120, 650));
         setMinimumSize(new java.awt.Dimension(1113, 600));
-        setPreferredSize(new java.awt.Dimension(1120, 650));
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -297,7 +295,7 @@ public class View extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Posicion", "Valor en memoria"
+                "Marco", "Pos", "Valor"
             }
         ));
         jScrollPane2.setViewportView(jTable2);
@@ -518,7 +516,7 @@ public class View extends javax.swing.JFrame {
         jLabel20.setText("EJECUCIÓN");
         getContentPane().add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 470, 200, -1));
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FCFS", "SRT", "SJF", "RR", "HRRN", "Multi-procesador", "CFS" }));
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FCFS", "SRT", "SJF", "RR", "HRRN", "CFS" }));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBox1ActionPerformed(evt);
@@ -1116,14 +1114,21 @@ public class View extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.addRow(new Object[]{colum1,colum2,colum3});
     }
-    public void addFilaMemoria(String colum1, String colum2){
+    //memoria
+    public void addFilaMemoria(String colum0,String colum1, String colum2){
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-        model.addRow(new Object[]{colum1,colum2});
+        model.addRow(new Object[]{colum0,colum1,colum2});
     }
     public void updateFilaMemoria(int fila,String colum1, String colum2){
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-        model.setValueAt(colum1,fila,0);
-        model.setValueAt(colum2,fila,1);
+        model.setValueAt(colum1,fila,1);
+        model.setValueAt(colum2,fila,2);
+    }
+    public void updateMarcoMemoria(int filaInicio, int filaFin, String colum1){
+        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+        for(int i =filaInicio;i<filaFin;i++){
+            model.setValueAt(colum1,i,0);
+        }
     }
    
     public void addFilaFila(int fila,String colum1){

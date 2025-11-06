@@ -21,6 +21,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import modelo.BCP;
 import modelo.Estadisticas;
+import static modelo.Memoria.bloquesDinamicos;
+import static modelo.Memoria.particionesFija;
+import static modelo.Memoria.marcos;
 
 public class Controlador {
     private SistemaOperativo pc;
@@ -205,8 +208,6 @@ public class Controlador {
         LinkedHashMap<String, ArrayList<Integer>> mapaRegistro = new LinkedHashMap<>(mapa);
         new Thread(() -> {   
             int next=0;
-      
-      
             while (mapa.size() > 0) {
                 //memoria
                 int indice = modoGuardado();
@@ -266,6 +267,7 @@ public class Controlador {
               
         switch(tipo){
             case "Fija": 
+                crearMarcoFIjo();
                 Particion particionLibre = pc.getMemoria().obtenerParticionLibre();
                 if(particionLibre==null){
                     JOptionPane.showMessageDialog(null, "Error, no hay particiones libres");
@@ -278,6 +280,7 @@ public class Controlador {
               
             
             case "Dinámica": 
+                crearMarcoDinamico();
                 Particion bloque = pc.getMemoria().asignarBloqueDinamico();
                 if(bloque==null){
                     JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
@@ -286,6 +289,7 @@ public class Controlador {
      
                 return bloque.getBase();
             case "Segmentación": 
+                crearMarcoDinamico();
                 Particion segmento = pc.getMemoria().asignarSegemento();
                 if(segmento==null){
                     JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
@@ -294,6 +298,7 @@ public class Controlador {
      
                 return segmento.getBase();
             case "Paginación":
+                crearMarcosPaginacion();
                 Particion marco = pc.getMemoria().asignarSegemento();
                 if(marco==null){
                     JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
@@ -482,12 +487,6 @@ public class Controlador {
             i++;
         }
     }
- 
-    public void updateMemoria(String instr, int CPU){ 
-        int star = pc.getCPU(CPU).getPC();
-        view.addFilaMemoria(Integer.toString(star), instr);
-        
-    }
 
     public void updateMemoria(BCP bcp, int posicion){
         view.updateFilaMemoria(posicion,Integer.toString(posicion++),"p"+bcp.getIdProceso());
@@ -577,7 +576,41 @@ public class Controlador {
     public void guardarRam(int inicio,int rango, String val){
         
         for(int i =inicio;i<rango;i++){
-            view.addFilaMemoria(Integer.toString(i), val);
+            view.addFilaMemoria("-",Integer.toString(i), val);
+        }
+    }
+    //MARCOS
+    public void crearMarcoFIjo(){
+        for(int i=0;i<particionesFija.size();i++){
+            int base = particionesFija.get(i).getBase();
+            int alcance =  particionesFija.get(i).getTamaño();
+            int todo = alcance+base;
+            int temp = i+1;
+            view.updateMarcoMemoria(base,todo,"M"+temp);
+        }
+    }
+    public void setMarcos(){
+       view.updateMarcoMemoria(0,pc.getMemoria().size(),"-");
+        
+    }
+    public void crearMarcoDinamico(){
+        setMarcos();
+        for(int i=0;i<bloquesDinamicos.size();i++){
+            int base = bloquesDinamicos.get(i).getBase();
+            int alcance =  bloquesDinamicos.get(i).getTamaño();
+            int todo = alcance+base;
+            int temp = i+1;
+            view.updateMarcoMemoria(base,todo,"M"+temp);
+        }
+    }
+    public void crearMarcosPaginacion(){
+        setMarcos();
+        for(int i=0;i<marcos.size();i++){
+            int base = marcos.get(i).getBase();
+            int alcance =  marcos.get(i).getTamaño();
+            int todo = alcance+base;
+            int temp = i+1;
+            view.updateMarcoMemoria(base,todo,"M"+temp);
         }
     }
     
@@ -644,6 +677,7 @@ public class Controlador {
         estadosIniciales();
         view.getModelDiagram().setRowCount(0);
         tablaEjecucion();
+        pc.getMemoria().limpiarMemoriaPP();
     }
     
     public void cleanAll(){

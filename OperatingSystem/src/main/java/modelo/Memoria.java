@@ -9,8 +9,10 @@ import java.util.Map;
 
 public class Memoria {
     public static HashMap<Integer, Particion> particionesFija = new HashMap<>();
-    public List<Particion> bloquesDinamicos = new ArrayList<>();
+    public static List<Particion> bloquesDinamicos = new ArrayList<>();
     private static int ultimaParticionAsignada = 0;
+    public static List<Particion> marcos = new ArrayList<>();
+    private static final int TAM_PAGINA = 16;
     private String[] memoria;
  
   
@@ -160,8 +162,12 @@ public class Memoria {
 
         return null;
     }
-    private List<Particion> marcos = new ArrayList<>();
-    private static final int TAM_PAGINA = 16;
+        /*
+    =========================================
+    PAGINADO
+    =========================================
+    */
+
 
     public void inicializarPaginacion(int tamMemoria) {
         marcos.clear();
@@ -205,7 +211,11 @@ public class Memoria {
         System.out.println("⚠️ No hay marcos disponibles (memoria llena)");
         return null;
     }
-    
+    public void limpiarMemoriaPP() {
+        particionesFija.clear();
+        bloquesDinamicos.clear();
+        marcos.clear();
+    }
     public Memoria(int size){
         memoria = new String[size];
     }

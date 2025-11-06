@@ -436,9 +436,11 @@ public class SistemaOperativo {
             contProceso++;
             inicio+=32;
         }
+      
        
  
     }
+    
     public void guardarBCPMemoria(BCP bcp, int posicion){
         memoria.setMemoria(posicion++,"p"+bcp.getIdProceso());
         memoria.setMemoria(posicion++,bcp.getEstado());

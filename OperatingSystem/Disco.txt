@@ -1,7 +1,7 @@
-test4.asm|50|2
-test5.asm|52|3
-test6.asm|55|6
-test3.asm|61|4
+test3.asm|50|4
+test4.asm|54|2
+test5.asm|56|3
+test6.asm|59|5
 
 
 
@@ -48,6 +48,10 @@ test3.asm|61|4
 
 
 
+mov ax, 10
+mov bx, 2
+sub bx
+add ax
 mov ax, 1
 mov bx, 1
 mov ax, 15
@@ -58,11 +62,7 @@ mov bx, 2
 sub bx
 add ax
 store bx
-mov cx, 7
-mov ax, 10
-mov bx, 2
-sub bx
-add ax
+
 
 
 
