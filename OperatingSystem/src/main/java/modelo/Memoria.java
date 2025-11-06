@@ -11,7 +11,6 @@ public class Memoria {
     public static HashMap<Integer, Particion> particionesFija = new HashMap<>();
     public static List<Particion> bloquesDinamicos = new ArrayList<>();
     private static int ultimaParticionAsignada = 0;
-    public static List<Particion> marcos = new ArrayList<>();
     private static final int TAM_PAGINA = 16;
     private String[] memoria;
  
@@ -170,11 +169,11 @@ public class Memoria {
 
 
     public void inicializarPaginacion(int tamMemoria) {
-        marcos.clear();
-        int cantidadMarcos = tamMemoria / TAM_PAGINA;
-        int base = 0;
+        bloquesDinamicos.clear();
+        int base = Math.max(20, size()/5);
+        int cantidadMarcos = (tamMemoria-base) / TAM_PAGINA;
         for (int i = 0; i < cantidadMarcos; i++) {
-            marcos.add(new Particion(base, TAM_PAGINA, false));
+            bloquesDinamicos.add(new Particion(base, TAM_PAGINA, false));
             base += TAM_PAGINA;
         }
         ultimaParticionAsignada = 0;
@@ -182,14 +181,14 @@ public class Memoria {
     }
     
     public Particion asignarPagina() {
-        int n = marcos.size();
+        int n = bloquesDinamicos.size();
         if (n == 0) {
             System.out.println("No hay marcos inicializados.");
             return null;
         }
 
         for (int i = ultimaParticionAsignada; i < n; i++) {
-            Particion marco = marcos.get(i);
+            Particion marco = bloquesDinamicos.get(i);
             if (!marco.isOcupado()) {
                 marco.setOcupado(true);
                 ultimaParticionAsignada = (i + 1) % n;
@@ -199,7 +198,7 @@ public class Memoria {
         }
 
         for (int i = 0; i < ultimaParticionAsignada; i++) {
-            Particion marco = marcos.get(i);
+            Particion marco = bloquesDinamicos.get(i);
             if (!marco.isOcupado()) {
                 marco.setOcupado(true);
                 ultimaParticionAsignada = (i + 1) % n;
@@ -214,7 +213,6 @@ public class Memoria {
     public void limpiarMemoriaPP() {
         particionesFija.clear();
         bloquesDinamicos.clear();
-        marcos.clear();
     }
     public Memoria(int size){
         memoria = new String[size];

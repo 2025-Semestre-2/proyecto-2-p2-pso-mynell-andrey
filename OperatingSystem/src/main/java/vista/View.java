@@ -146,6 +146,7 @@ public class View extends javax.swing.JFrame {
         setTitle("Mini PC");
         setBackground(new java.awt.Color(153, 0, 153));
         setMinimumSize(new java.awt.Dimension(1113, 600));
+        setPreferredSize(new java.awt.Dimension(1130, 655));
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 

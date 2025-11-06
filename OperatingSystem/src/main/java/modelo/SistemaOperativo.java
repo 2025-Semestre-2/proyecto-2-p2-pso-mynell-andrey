@@ -425,7 +425,6 @@ public class SistemaOperativo {
         } 
         crearParticiones();
         memoria.inicializarBloqueDinamico(memoria.size());
-        memoria.inicializarPaginacion(memoria.size());
     }
     public void crearParticiones(){
         particionesFija.clear();
@@ -436,9 +435,6 @@ public class SistemaOperativo {
             contProceso++;
             inicio+=32;
         }
-      
-       
- 
     }
     
     public void guardarBCPMemoria(BCP bcp, int posicion){

@@ -23,7 +23,6 @@ import modelo.BCP;
 import modelo.Estadisticas;
 import static modelo.Memoria.bloquesDinamicos;
 import static modelo.Memoria.particionesFija;
-import static modelo.Memoria.marcos;
 
 public class Controlador {
     private SistemaOperativo pc;
@@ -36,6 +35,7 @@ public class Controlador {
     private final Object lock = new Object();
     private boolean modoPasoPaso = false;
     private boolean hiloIniciado = false;
+    private boolean pag = true;
 
     public Controlador(SistemaOperativo pc, View view,Estadistica estadistica ) {
         this.pc = pc;
@@ -260,6 +260,7 @@ public class Controlador {
                 eliminarProcesoU(mapa,nombreproceso);
                 librarGuardado(indice);
             }
+            JOptionPane.showMessageDialog(null, "Ejecucion terminada");
         }).start(); 
     }
     public int modoGuardado(){
@@ -298,8 +299,12 @@ public class Controlador {
      
                 return segmento.getBase();
             case "Paginación":
-                crearMarcosPaginacion();
-                Particion marco = pc.getMemoria().asignarSegemento();
+                if (pag){
+                    pc.getMemoria().inicializarPaginacion(pc.getMemoria().size());
+                    pag = false;
+                }
+                crearMarcoDinamico();
+                Particion marco = pc.getMemoria().asignarPagina();
                 if(marco==null){
                     JOptionPane.showMessageDialog(null, "Error en Dinamica, no hay particiones libres");
                     return -1;
@@ -603,17 +608,6 @@ public class Controlador {
             view.updateMarcoMemoria(base,todo,"M"+temp);
         }
     }
-    public void crearMarcosPaginacion(){
-        setMarcos();
-        for(int i=0;i<marcos.size();i++){
-            int base = marcos.get(i).getBase();
-            int alcance =  marcos.get(i).getTamaño();
-            int todo = alcance+base;
-            int temp = i+1;
-            view.updateMarcoMemoria(base,todo,"M"+temp);
-        }
-    }
-    
 
     public void spinnerTamano(){
         try {
@@ -666,6 +660,7 @@ public class Controlador {
         estadistica = new Estadistica();
         est = new Estadisticas();
         pc.tamannoMemoria(512);
+        pc.getMemoria().limpiarMemoriaPP();
         
         showDisk();
         showRam();
@@ -677,7 +672,7 @@ public class Controlador {
         estadosIniciales();
         view.getModelDiagram().setRowCount(0);
         tablaEjecucion();
-        pc.getMemoria().limpiarMemoriaPP();
+        pag = true;
     }
     
     public void cleanAll(){
